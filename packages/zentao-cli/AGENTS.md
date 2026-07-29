@@ -44,7 +44,7 @@ src/
 ├── commands/                # Subcommand registrations & handlers
 │   ├── register-modules.ts  # Dynamic module → subcommand mapping
 │   ├── module-handler.ts    # Execute module commands & render
-│   ├── workspace.ts         # workspace / ls / set
+│   ├── workspace.ts         # workspace / ls / set / set --product|project|execution
 │   ├── autocomplete.ts      # bash/zsh/fish completion scripts
 │   ├── add-skill.ts         # Install skills into AI agents
 │   ├── add-mcp.ts           # Write MCP config into AI agents
@@ -53,7 +53,7 @@ src/
 ├── api/index.ts             # SDK re-export + createClient
 ├── modules/                 # helper, args, executor
 ├── auth/                    # Login flow & credential prompting
-├── config/                  # configstore + workspace state
+├── config/                  # configstore + workspace state / workspace-sync (API 建区 + autoSet)
 ├── mcp/                     # MCP server (tools + lifecycle)
 ├── types/                   # CLI types + re-export SDK types
 └── utils/                   # format, render, HTML→MD, update-notifier, ...

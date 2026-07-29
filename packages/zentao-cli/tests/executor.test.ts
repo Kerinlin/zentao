@@ -56,6 +56,54 @@ describe('module executor (zentao-api request pipeline)', () => {
         expect(result.data).toEqual([{ id: 1, name: '保留', desc: 'Hello' }]);
     });
 
+    test('injects workspace execution when listing scoped bugs without explicit scope', async () => {
+        const { client, requests } = mockClient(() => ({
+            status: 'success',
+            bugs: [{ id: 1, title: 'b1' }],
+            pager: { recTotal: 1, recPerPage: 20, pageID: 1 },
+        }));
+
+        await executeModuleCommand(
+            client,
+            getModule('bug')!,
+            'list',
+            [],
+            {},
+            DEFAULT_CONFIG,
+            {
+                id: 1,
+                product: { id: 9, name: 'P' },
+                execution: { id: 4, name: 'E' },
+            },
+        );
+
+        expect(requests[0].path).toBe('/executions/4/bugs');
+    });
+
+    test('does not override explicit product scope with workspace execution', async () => {
+        const { client, requests } = mockClient(() => ({
+            status: 'success',
+            bugs: [],
+            pager: { recTotal: 0, recPerPage: 20, pageID: 1 },
+        }));
+
+        await executeModuleCommand(
+            client,
+            getModule('bug')!,
+            'list',
+            [],
+            { product: '9' },
+            DEFAULT_CONFIG,
+            {
+                id: 1,
+                product: { id: 1, name: 'P' },
+                execution: { id: 4, name: 'E' },
+            },
+        );
+
+        expect(requests[0].path).toBe('/products/9/bugs');
+    });
+
     test('executes get commands with HTML conversion and pick', async () => {
         const { client, requests } = mockClient(() => ({
             status: 'success',

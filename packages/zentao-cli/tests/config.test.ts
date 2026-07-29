@@ -56,11 +56,13 @@ describe('Workspace type validation', () => {
     test('workspace structure is correct', () => {
         const ws: Workspace = {
             id: 1,
+            name: '主线',
             product: { id: 1, name: '产品1' },
             project: { id: 2, name: '项目1' },
             execution: { id: 3, name: '执行1' },
         };
         expect(ws.id).toBe(1);
+        expect(ws.name).toBe('主线');
         expect(ws.product?.id).toBe(1);
         expect(ws.project?.name).toBe('项目1');
         expect(ws.execution?.id).toBe(3);
@@ -68,6 +70,7 @@ describe('Workspace type validation', () => {
 
     test('workspace with optional fields', () => {
         const ws: Workspace = { id: 1 };
+        expect(ws.name).toBeUndefined();
         expect(ws.product).toBeUndefined();
         expect(ws.project).toBeUndefined();
         expect(ws.execution).toBeUndefined();

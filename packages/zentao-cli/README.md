@@ -11,7 +11,7 @@
 * ✅ 对 AI Agents 友好，帮助信息完善，支持输出 Markdown
 * ✅ 支持以 AI 技能的方式使用，`zentao add-skill` 一键安装到 AI Agent
 * ✅ 支持 MCP 服务，`npx @kerin/zentao-cli mcp` 启动；`zentao add-mcp` 一键写入 Agent 配置
-* ✅ 基础工作区管理：`zentao workspace` / `ls` / `set <id>` 查看与切换（按 product/project/execution 自动建工作区仍待完善）
+* ✅ 工作区管理：`ls` / `set`（ID 或名称切换、就地改范围）/ `add`（按对象建区）/ `rm`；命令自动注入范围并提示；可选 `autoSetWorkspace`
 * ✅ Shell 自动补全脚本：`zentao autocomplete bash|zsh|fish`
 * ✅ 富文本图床上传：`zentao upload <image>`
 * ✅ `zentao upgrade` 检查新版本并自动升级 CLI
@@ -19,7 +19,6 @@
 
 待实现 / 待完善特性：
 
-* [ ] 工作区：按 product / project / execution 自动拉取并创建、autoSetWorkspace 完整链路
 * [ ] 支持批量创建和更新操作
 * [ ] 对象预设 pick 列表
 * [ ] Markdown 输出渲染，提供适合人阅读的终端渲染模式，为 Markdown 内容应用多彩格式，代码块支持高亮

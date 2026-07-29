@@ -49,12 +49,14 @@
             "workspaces": [
                 {
                     "id": 1,
+                    "name": "主线迭代",
                     "product":   {"id": 1, "name": "产品1"},
                     "project":   {"id": 1, "name": "项目1"},
                     "execution": {"id": 1, "name": "执行1"}
                 },
                 {
                     "id": 2,
+                    "name": "客户A交付",
                     "product":   {"id": 1, "name": "产品1"},
                     "project":   {"id": 2, "name": "项目2"},
                     "execution": {"id": 3, "name": "执行3"}

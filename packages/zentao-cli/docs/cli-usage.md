@@ -157,10 +157,62 @@ $ zentao product --format=json
     }
 }
 
-# 获取项目 #5 下的执行列表；如果省略 --project 参数，则使用当前工作区中的项目
+# 获取项目 #5 下的执行列表
 $ zentao execution --project=5
 
 # 输出略
+
+# 若已设置当前工作区且其中含 project，也可省略 --project：
+# $ zentao workspace set --project=5
+# $ zentao execution
+```
+
+## 工作区管理
+
+工作区是绑定在当前登录 Profile 上的本地上下文，记录你当前关注的**产品 / 项目 / 执行**，可用 `name` 做备注。设置后，调用需要范围参数的模块（如 bug、story、task）时，若未显式传 `--product` / `--project` / `--execution`，CLI 会自动注入，并在 stderr 提示本次使用的工作区。
+
+```bash
+# 查看当前工作区（无范围时会提示如何设置）
+$ zentao workspace
+
+# 列出全部工作区（当前优先，其余按最近使用排序）
+$ zentao workspace ls
+
+# 切换：支持数字 ID 或名称（精确 / 忽略大小写 / 包含；多命中报错）
+$ zentao workspace set 2
+$ zentao workspace set 主线迭代
+
+# 就地改当前（或先切再改）：不新建工作区
+$ zentao workspace set --name=主线迭代
+$ zentao workspace set --execution=9
+$ zentao workspace set 2 --project=5 --name=客户A
+
+# 按对象新建或切换到「该对象主键」工作区（会请求 API；同主键复用）
+$ zentao workspace add --product=12
+$ zentao workspace add --project=5 --name=Q3项目
+$ zentao workspace add --execution=4
+
+# 删除（删当前区时自动切到最近使用的其他区；删光则建空区）
+$ zentao workspace rm 2
+$ zentao workspace rm 客户A
+
+# 设置后可省略范围参数
+$ zentao bug                 # stderr: 使用工作区 #2「主线」：product=12, …
+$ zentao task                # 工作区有 execution 时自动带上
+```
+
+| 命令 | 语义 |
+|------|------|
+| `set [id\|name]` | 切换到指定工作区 |
+| `set --product/…` | **就地修改**当前（或已切换目标）工作区范围 |
+| `add --product/…` | **新建/复用**以该对象为主键的工作区并切换过去 |
+| `rm` | 删除 |
+
+开启自动切换（默认关闭）：
+
+```bash
+$ zentao config set autoSetWorkspace true
+# 之后 zentao product 1 / project create / execution update 等成功后会自动 upsert 并切换工作区
 ```
 
 <details>

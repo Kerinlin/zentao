@@ -10,12 +10,19 @@ export interface WorkspaceRef {
 export interface Workspace {
     /** 工作区 ID */
     id: number;
+    /**
+     * 工作区名称/备注，仅用于本地标识，不对应禅道服务端对象。
+     * 例如「主线迭代」「客户 A 交付」。
+     */
+    name?: string;
     /** 当前关联的产品 */
     product?: WorkspaceRef;
     /** 当前关联的项目 */
     project?: WorkspaceRef;
     /** 当前关联的执行 */
     execution?: WorkspaceRef;
+    /** 最近一次设为当前工作区的时间（ISO 8601），用于 ls 排序 */
+    lastUsedAt?: string;
 }
 
 /** 用户可配置的选项，存储在 profile.config 中 */

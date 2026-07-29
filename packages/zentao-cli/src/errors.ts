@@ -35,7 +35,10 @@ export const ERROR_CODES = {
 
     // 工作区 (40xx)
     E4001: '未找到指定的工作区，请通过 `zentao workspace ls` 查看可用工作区',
-    E4002: '当前未设置工作区，请通过 `zentao workspace set` 设置工作区',
+    E4002: '当前工作区未设置产品/项目/执行范围。请先执行 `zentao workspace set --product=<id>`（或 --project / --execution），或在命令中显式传入范围参数',
+    E4003: '无法根据 {kind} #{id} 设置工作区，请检查 ID 是否正确或是否有权限访问',
+    E4004: '名称「{name}」匹配到多个工作区（ID: {ids}），请改用数字 ID 指定',
+    E4005: '无法删除工作区：{reason}',
 
     // 网络通信 (50xx)
     E5001: '请求超时，请检查网络连接或禅道服务是否正常',

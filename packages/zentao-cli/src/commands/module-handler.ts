@@ -4,11 +4,14 @@ import { findAction, getAction, getAvailableActions } from '../modules/helper.js
 import { buildParams } from '../modules/args.js';
 import { executeModuleCommand } from '../modules/executor.js';
 import { getProfileConfig } from '../config/store.js';
-import { formatOutput } from '../utils/format.js';
+import { getCurrentWorkspace } from '../config/workspace.js';
+import { autoSetWorkspaceFromResult } from '../config/workspace-sync.js';
+import { formatOutput, formatList } from '../utils/format.js';
 import type { ModuleActionOptions } from '../types/index.js';
 import { createInterface } from 'node:readline';
 import { renderError, renderObject } from '../utils/render.js';
 import { ZentaoError } from '../errors.js';
+import { workspaceToDisplay } from './workspace.js';
 
 
 /** JSON/raw 模式下跳过交互确认，便于脚本化调用 */
@@ -58,11 +61,34 @@ async function renderModuleExecution(
     args: string[],
     options: ModuleActionOptions,
     config: UserConfig,
+    profile: Profile,
 ): Promise<void> {
     const format = options.format ?? config.defaultOutputFormat ?? 'markdown';
     const silent = options.silent ?? config.silent ?? false;
+    const workspace = getCurrentWorkspace(profile);
 
-    const execution = await executeModuleCommand(client, module, actionName, args, options, config);
+    const execution = await executeModuleCommand(
+        client,
+        module,
+        actionName,
+        args,
+        options,
+        config,
+        workspace,
+    );
+
+    // autoSetWorkspace：访问/创建/更新 product|project|execution 后自动切换工作区
+    let autoSetWs = undefined as ReturnType<typeof getCurrentWorkspace> | undefined;
+    if (config.autoSetWorkspace) {
+        autoSetWs = await autoSetWorkspaceFromResult(
+            client,
+            profile,
+            module.name,
+            execution.action.type,
+            execution.data,
+        );
+    }
+
     if (silent) {
         return;
     }
@@ -95,16 +121,21 @@ async function renderModuleExecution(
     if (execution.action.type === 'get') {
         const output = renderObject(execution.data as Record<string, unknown>, format, { fields: execution.fields });
         if (output) console.log(output);
-        return;
+    } else {
+        const output = formatOutput(execution.data, {
+            format,
+            isList: false,
+            fields: execution.fields,
+            jsonPretty: config.jsonPretty,
+        });
+        if (output) console.log(output);
     }
 
-    const output = formatOutput(execution.data, {
-        format,
-        isList: false,
-        fields: execution.fields,
-        jsonPretty: config.jsonPretty,
-    });
-    if (output) console.log(output);
+    if (autoSetWs && format !== 'json') {
+        console.log('');
+        console.log('已设置工作区');
+        console.log(formatList(workspaceToDisplay(autoSetWs)));
+    }
 }
 
 
@@ -174,7 +205,7 @@ export async function handleModuleCommand(
         throw new ZentaoError('E2009', { option: 'id', reason: '必须提供要操作的对象 ID' });
     }
 
-    await renderModuleExecution(client, module, actionName, args, options, config);
+    await renderModuleExecution(client, module, actionName, args, options, config, profile);
 }
 
 /**

@@ -4,6 +4,7 @@ import type { Profile, Workspace } from '../src/types/config';
 /** Shared workspace fixture for tests */
 export const mockWorkspace: Workspace = {
     id: 1,
+    name: '默认工作区',
     product: { id: 1, name: '产品1' },
     project: { id: 2, name: '项目1' },
     execution: { id: 3, name: '执行1' },

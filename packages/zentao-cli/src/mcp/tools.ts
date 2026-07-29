@@ -7,6 +7,8 @@ import { executeModuleCommand } from '../modules/executor.js';
 import { ZentaoError } from '../errors.js';
 import type { AuthProvider } from './server.js';
 import { getCurrentProfile, getProfileConfig, setCurrentProfile, profileKey } from '../config/store.js';
+import { getCurrentWorkspace } from '../config/workspace.js';
+import { autoSetWorkspaceFromResult } from '../config/workspace-sync.js';
 import { DEFAULT_CONFIG } from '../config/defaults.js';
 
 function buildToolDescription(mod: ModuleDefinition): string {
@@ -191,7 +193,12 @@ async function handleModuleTool(
         yes: true,
     };
 
-    const execution = await executeModuleCommand(client, mod, actionName, [], opts, config);
+    const workspace = profile ? getCurrentWorkspace(profile) : undefined;
+    const execution = await executeModuleCommand(client, mod, actionName, [], opts, config, workspace);
+
+    if (profile && config.autoSetWorkspace) {
+        await autoSetWorkspaceFromResult(client, profile, mod.name, execution.action.type, execution.data);
+    }
 
     if (execution.action.type === 'list') {
         const response: Record<string, unknown> = { data: execution.data };

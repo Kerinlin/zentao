@@ -11,7 +11,7 @@ const ROOT_COMMANDS = [
 ];
 
 const CONFIG_SUBCOMMANDS = ['get', 'set'];
-const WORKSPACE_SUBCOMMANDS = ['ls', 'set'];
+const WORKSPACE_SUBCOMMANDS = ['ls', 'set', 'add', 'rm'];
 const COMMON_OPTIONS = ['--format', '--silent', '--insecure', '--timeout', '-h', '--help'];
 
 function createCandidates(): string {

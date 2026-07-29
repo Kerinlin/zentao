@@ -50,9 +50,14 @@ function writeConfig(path: string, data: object) {
 
 ## 工作区管理
 
-> ⚠️ 部分实现：`zentao workspace` / `ls` / `set <id>` 已可用；按 `--product` / `--project` / `--execution` 自动拉取并创建工作区、以及 `autoSetWorkspace` 完整联动仍为 TODO。
+> ✅ 已实现：
+> - `workspace` / `ls` / `set`（ID/名称切换 + 就地改）/ `add`（按对象 upsert）/ `rm`
+> - 名称备注、`lastUsedAt` 排序、注入时 stderr 提示、空区友好错误 E4002
+> - `autoSetWorkspace`：get/create/update product|project|execution 自动 upsert 切换
+>
+> 仍可增强：按模块差异化注入策略、`autoSet` 分级（off/on-empty/always）、失效对象检测、MCP workspace tools。
 
-目标能力：`zentao-cli` 记住用户上次访问的产品、项目和执行信息，调用相关 API 时自动使用上下文。设计中的命令包括：
+`zentao-cli` 记住用户上次访问的产品、项目和执行信息，调用相关 API 时自动使用上下文。命令包括：
 
 * `zentao workspace`：查看当前工作区信息
 * `zentao workspace ls`：查看所有工作区信息

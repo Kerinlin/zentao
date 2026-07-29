@@ -1,6 +1,12 @@
 import { request } from '@kerin/zentao-api';
 import type { ZentaoClient } from '../api/index.js';
 import { mapSdkError } from '../errors.js';
+import {
+    applyWorkspaceDefaults,
+    formatWorkspaceInjectHint,
+    workspaceHasScope,
+    type WorkspaceInjection,
+} from '../config/workspace.js';
 import type {
     ListPagerInfo,
     ModuleAction,
@@ -8,6 +14,7 @@ import type {
     ModuleActionOptions,
     ModuleDefinition,
     UserConfig,
+    Workspace,
 } from '../types/index.js';
 import { filterData, pickFields, pickFieldsSingle, searchData, sortData } from '../utils/data.js';
 import { convertHtmlFields, convertHtmlFieldsInArray } from '../utils/html.js';
@@ -28,6 +35,8 @@ export interface ModuleExecutionResult {
     fields?: string[];
     /** 是否为列表结果 */
     isList: boolean;
+    /** 本次从工作区注入的范围参数（供调用方打印提示） */
+    workspaceInjected?: WorkspaceInjection;
 }
 
 function parseFields(fields?: string): string[] | undefined {
@@ -49,14 +58,56 @@ export async function executeModuleCommand(
     args: string[],
     options: ModuleActionOptions,
     config: UserConfig,
+    workspace?: Workspace,
 ): Promise<ModuleExecutionResult> {
     const action = getAction(module, actionName);
     if (!action) {
         throw new ZentaoError('E2005', { module: module.name });
     }
 
-    const params = buildParams(options, actionName, args);
+    // 用户未显式传 product/project/execution 时，用当前工作区补缺省范围
+    const built = buildParams(options, actionName, args);
+    const { params, injected } = applyWorkspaceDefaults(built, workspace);
     const requestName = `${module.name}/${normalizeActionName(actionName)}`;
+
+    // 仅对「列表 scope 路径」做空工作区预检。
+    // 注意：product/delete 的 pathParams.productID 由 params.id 填充，不能当成缺 scope。
+    const pathParams = action.pathParams ?? {};
+    const needsScope = 'scope' in pathParams;
+    if (needsScope) {
+        const hasScope =
+            !isBlank(params.scope) ||
+            !isBlank(params.scopeID) ||
+            !isBlank(params.product) ||
+            !isBlank(params.productID) ||
+            !isBlank(params.project) ||
+            !isBlank(params.projectID) ||
+            !isBlank(params.execution) ||
+            !isBlank(params.executionID);
+        if (!hasScope) {
+            throw new ZentaoError('E4002');
+        }
+    }
+
+    // task/list 等：路径依赖外键 executionID，且不是本模块对象 id
+    const ownIdKey = `${module.name}ID`;
+    for (const key of Object.keys(pathParams)) {
+        if (!key.endsWith('ID') || key === 'scopeID' || key === ownIdKey) continue;
+        const short = key.slice(0, -2); // executionID → execution
+        if (isBlank(params[key]) && isBlank(params[short]) && isBlank(params.id)) {
+            throw new ZentaoError('E4002');
+        }
+    }
+
+    // 人机可读模式下提示本次注入（silent / json / raw 不打扰）
+    const format = options.format ?? config.defaultOutputFormat ?? 'markdown';
+    const silent = options.silent ?? config.silent ?? false;
+    if (!silent && format !== 'json' && format !== 'raw' && workspace) {
+        const hint = formatWorkspaceInjectHint(workspace, injected);
+        if (hint) {
+            console.error(hint);
+        }
+    }
 
     let response;
     try {
@@ -71,7 +122,17 @@ export async function executeModuleCommand(
             insecure: options.insecure,
         });
     } catch (error) {
-        throw mapSdkError(error);
+        const mapped = mapSdkError(error);
+        // 缺参时若工作区为空，升级为 E4002 指引
+        if (
+            mapped instanceof ZentaoError &&
+            mapped.code === '2003' &&
+            workspace &&
+            !workspaceHasScope(workspace)
+        ) {
+            throw new ZentaoError('E4002');
+        }
+        throw mapped;
     }
 
     const fields = parseFields(options.pick);
@@ -82,6 +143,8 @@ export async function executeModuleCommand(
             recTotal: response.pager.total,
         }
         : undefined;
+
+    const injectedMeta = Object.keys(injected).length > 0 ? injected : undefined;
 
     if (action.type === 'list') {
         let data = (Array.isArray(response.data) ? response.data : []) as Record<string, unknown>[];
@@ -105,7 +168,15 @@ export async function executeModuleCommand(
             data = pickFields(data, fields);
         }
 
-        return { action, data, rawResponse: response, pager, fields, isList: true };
+        return {
+            action,
+            data,
+            rawResponse: response,
+            pager,
+            fields,
+            isList: true,
+            workspaceInjected: injectedMeta,
+        };
     }
 
     if (action.type === 'get') {
@@ -117,8 +188,26 @@ export async function executeModuleCommand(
             data = pickFieldsSingle(data, fields);
         }
 
-        return { action, data, rawResponse: response, fields, isList: false };
+        return {
+            action,
+            data,
+            rawResponse: response,
+            fields,
+            isList: false,
+            workspaceInjected: injectedMeta,
+        };
     }
 
-    return { action, data: response.data, rawResponse: response, fields, isList: false };
+    return {
+        action,
+        data: response.data,
+        rawResponse: response,
+        fields,
+        isList: false,
+        workspaceInjected: injectedMeta,
+    };
+}
+
+function isBlank(value: unknown): boolean {
+    return value === undefined || value === null || value === '';
 }
