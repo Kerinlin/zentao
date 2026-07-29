@@ -1,5 +1,17 @@
 # @kerin/zentao-cli
 
+## 1.2.0
+
+### Minor Changes
+
+- c796a0a: - 增加工作区
+  - 增加工作区
+
+### Patch Changes
+
+- Updated dependencies [c796a0a]
+  - @kerin/zentao-api@1.2.0
+
 ## 1.1.0
 
 ### Minor Changes
