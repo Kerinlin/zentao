@@ -269,6 +269,63 @@ describe('resolveActionRequest', () => {
     });
   });
 
+  test('accepts product alias for required productID and dual-writes both fields', () => {
+    defineModules({
+      name: 'bugform',
+      actions: [
+        {
+          name: 'create',
+          type: 'create',
+          method: 'post',
+          path: '/bugs',
+          resultType: 'object',
+          requestBody: {
+            type: 'object',
+            schema: {
+              type: 'object',
+              required: ['productID', 'title', 'openedBuild'],
+              properties: {
+                productID: { type: 'integer', description: '所属产品' },
+                title: { type: 'string' },
+                openedBuild: { type: 'array', items: { type: 'string' } },
+                project: { type: 'integer' },
+              },
+            },
+          },
+        },
+      ],
+    });
+
+    // CLI / 工作区注入的是短名 product，schema 必填 productID
+    const fromShort = resolveActionRequest(getModule('bugform')!, 'create', {
+      product: '189',
+      project: 1278,
+      title: 'from product alias',
+      openedBuild: 'trunk',
+    });
+    expect(fromShort.data).toEqual({
+      productID: 189,
+      product: 189,
+      title: 'from product alias',
+      openedBuild: ['trunk'],
+      project: 1278,
+      projectID: 1278,
+    });
+
+    // 仅传 productID 时，body 仍双写 product（禅道 PHP 读短名）
+    const fromLong = resolveActionRequest(getModule('bugform')!, 'create', {
+      productID: 189,
+      title: 'from productID',
+      openedBuild: ['trunk'],
+    });
+    expect(fromLong.data).toEqual({
+      productID: 189,
+      product: 189,
+      title: 'from productID',
+      openedBuild: ['trunk'],
+    });
+  });
+
   test('coerces common boolean string values without treating every non-empty string as true', () => {
     defineModules({
       name: 'flagform',

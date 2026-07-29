@@ -335,16 +335,20 @@ export function applyWorkspaceDefaults(
 
     const next = { ...params };
     const injected: WorkspaceInjection = {};
+    // 同时写入短名与 *ID：list 走 product 路径推断，create body 的 OpenAPI 字段常为 productID。
     if (workspace.product && isBlank(next.product) && isBlank(next.productID)) {
         next.product = workspace.product.id;
+        next.productID = workspace.product.id;
         injected.product = workspace.product.id;
     }
     if (workspace.project && isBlank(next.project) && isBlank(next.projectID)) {
         next.project = workspace.project.id;
+        next.projectID = workspace.project.id;
         injected.project = workspace.project.id;
     }
     if (workspace.execution && isBlank(next.execution) && isBlank(next.executionID)) {
         next.execution = workspace.execution.id;
+        next.executionID = workspace.execution.id;
         injected.execution = workspace.execution.id;
     }
     return { params: next, injected };

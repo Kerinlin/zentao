@@ -173,8 +173,11 @@ describe('applyWorkspaceDefaults', () => {
         const result = applyWorkspaceDefaults({}, ws);
         expect(result.params).toEqual({
             product: 11,
+            productID: 11,
             project: 22,
+            projectID: 22,
             execution: 33,
+            executionID: 33,
         });
         expect(result.injected).toEqual({
             product: 11,

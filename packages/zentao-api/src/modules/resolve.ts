@@ -14,6 +14,64 @@ const VALID_SCOPES = new Set(Object.values(SCOPE_MAP));
 const SCOPE_KEY_ORDER = ['execution', 'project', 'product'] as const;
 
 /**
+ * body / 平铺 params 的范围字段别名。
+ * OpenAPI 生成表常用 `productID`，CLI 工作区与禅道 PHP 入参常用短名 `product`。
+ */
+const BODY_SCOPE_ALIASES: ReadonlyArray<readonly [string, string]> = [
+  ['product', 'productID'],
+  ['project', 'projectID'],
+  ['execution', 'executionID'],
+];
+
+function getScopeAliasKey(key: string): string | undefined {
+  for (const [short, long] of BODY_SCOPE_ALIASES) {
+    if (key === short) return long;
+    if (key === long) return short;
+  }
+  return undefined;
+}
+
+/**
+ * 从 `params.data` 合并结果与平铺 params 中取 body 字段值，支持范围字段短名/*ID 互为别名。
+ * 优先级：data[key] > params[key] > data[alias] > params[alias]。
+ */
+function pickBodyFieldValue(
+  key: string,
+  data: Record<string, unknown>,
+  params: Record<string, unknown>,
+): { raw: unknown; fromData: boolean; present: boolean } {
+  if (Object.prototype.hasOwnProperty.call(data, key) && data[key] !== undefined) {
+    return { raw: data[key], fromData: true, present: true };
+  }
+  if (Object.prototype.hasOwnProperty.call(params, key) && params[key] !== undefined) {
+    return { raw: params[key], fromData: false, present: true };
+  }
+  const alias = getScopeAliasKey(key);
+  if (alias) {
+    if (Object.prototype.hasOwnProperty.call(data, alias) && data[alias] !== undefined) {
+      return { raw: data[alias], fromData: true, present: true };
+    }
+    if (Object.prototype.hasOwnProperty.call(params, alias) && params[alias] !== undefined) {
+      return { raw: params[alias], fromData: false, present: true };
+    }
+  }
+  return { raw: undefined, fromData: false, present: false };
+}
+
+/**
+ * 若 body 仅含 `product` 或 `productID` 其一，则双写另一侧。
+ * 禅道服务端 create/update 常读短名，而 OpenAPI schema 常声明 *ID。
+ */
+function dualWriteScopeAliases(data: Record<string, unknown>): void {
+  for (const [short, long] of BODY_SCOPE_ALIASES) {
+    const hasShort = !isBlank(data[short]);
+    const hasLong = !isBlank(data[long]);
+    if (hasShort && !hasLong) data[long] = data[short];
+    else if (hasLong && !hasShort) data[short] = data[long];
+  }
+}
+
+/**
  * 从调用参数中推断作用域列表路径。
  *
  * 优先使用显式 `scope` + `scopeID`；二者缺一则回落到别名推断，
@@ -221,14 +279,13 @@ function buildRequestBody(action: ModuleAction, params: Record<string, unknown>)
   const required = new Set(schema.required ?? []);
   const schemaKeys = new Set(Object.keys(schema.properties ?? {}));
   for (const [key, property] of Object.entries(schema.properties ?? {})) {
-    // body 字段优先级：params.data 中的字段 > 平铺 params 字段 > schema 默认值。
-    const hasDataValue = Object.prototype.hasOwnProperty.call(data, key);
-    const hasParamValue = Object.prototype.hasOwnProperty.call(params, key);
-    const raw = hasDataValue ? data[key] : hasParamValue ? params[key] : property.defaultValue;
+    // body 字段优先级：data/params 的精确 key > 范围别名（product↔productID）> schema 默认值。
+    const picked = pickBodyFieldValue(key, data, params);
+    const raw = picked.present ? picked.raw : property.defaultValue;
     if (raw === undefined && (property.required || required.has(key))) {
       throw new ZentaoError('E_MISSING_PARAM', { param: key });
     }
-    const value = coerceValue(raw, property.type, key, hasDataValue);
+    const value = coerceValue(raw, property.type, key, picked.fromData);
     if (value !== undefined) {
       data[key] = value;
     }
@@ -246,6 +303,9 @@ function buildRequestBody(action: ModuleAction, params: Record<string, unknown>)
       data[key] = raw;
     }
   }
+
+  // create/update 都双写范围别名：schema 声明 productID 时同时下发 product，供禅道 PHP 入参读取。
+  dualWriteScopeAliases(data);
 
   return data;
 }
