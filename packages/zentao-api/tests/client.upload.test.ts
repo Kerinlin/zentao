@@ -54,8 +54,9 @@ describe('ZentaoClient.uploadImage', () => {
       });
 
       expect(receivedPath).toBe('/zentao/file-ajaxUpload.json');
-      expect(receivedToken).toBe('test-token-abc');
-      expect(receivedZentaosid).toBe('test-token-abc');
+      // Closure writes are invisible to CFA; String() keeps bun expect typings happy.
+      expect(String(receivedToken)).toBe('test-token-abc');
+      expect(String(receivedZentaosid)).toBe('test-token-abc');
       expect(receivedUid).toBeTruthy();
       expect(receivedField).not.toBeNull();
       expect(receivedFileName).toBe('shot.png');
