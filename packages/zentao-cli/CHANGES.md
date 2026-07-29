@@ -1,0 +1,362 @@
+# Changes
+
+## 0.2.10
+
+### ✨ 新特性 (Feat)
+
+- **login 已有配置回显**: `promptLogin` 接受可选 `defaults` 参数，URL 和 Account 回显为提示语中的默认值，用户直接回车即可保留；`login` 子命令无参数时自动传入 `currentProfile` 的 server/account；`install` 已登录时询问是否重新配置（默认否），不再直接跳过。
+
+### 🐛 修复 (Fix)
+
+- **install 连续交互问答**: `ask`/`confirm` 恢复使用 `rl.question` 配合 `setImmediate` 排空 stdin 残留，修复跳过安装后 `confirm` 读到空行立即返回的问题。
+- **install readline was closed**: `skip` 分支改为 `await runPostInstallFlow` 再 `return`，避免 `finally` 提前关闭 readline 导致后续交互失败。
+
+## 0.2.9
+
+### 🐛 修复 (Fix)
+
+- **install 连续交互问答**: `ask`/`confirm` 恢复使用 `rl.question`（内部正确管理 prompt 与输入等待），配合 `setImmediate` 在每次调用前排空 stdin 残留，修复跳过安装后 `confirm` 读到空行立即返回导致后续配置流程被跳过的问题。
+
+## 0.2.8
+
+### 🚀 优化与重构 (Refactor)
+
+- **install 自动升级**: 检测到远程版本较新时直接执行全局升级，不再询问用户，升级完成后继续后续配置步骤；仅在已是最新版或无法获取远程版本时保留跳过/覆盖/退出选项。
+
+## 0.2.7
+
+### ✨ 新特性 (Feat)
+
+- **install 远程版本检测**: 检测到已安装时调用 `fetchLatestVersion` 对比 npm 远程最新版；有新版时提示 `检测到已安装 x.x.x，远程最新版为 y.y.y`，默认动作改为覆盖升级；已是最新版或离线时回退为原有跳过逻辑。
+
+## 0.2.6
+
+### 🚀 优化与重构 (Refactor)
+
+- **install 统一使用 npm**: 移除 `detectAvailablePackageManager` 对 bun/pnpm 的探测与选择，全流程固定 npm，保持 install.sh 与 install 子命令前后一致；`resolveZentaoBin` 同步简化为只查 npm 全局 bin。
+
+## 0.2.5
+
+### 🐛 修复 (Fix)
+
+- **install 复用已有登录配置**: `runPostInstallFlow` 检测到已有 `currentProfile` 时跳过重新登录，直接复用当前配置，避免已登录用户每次 `zentao install` 都要重新输入 URL/账号/密码。
+
+## 0.2.4
+
+### 🐛 修复 (Fix)
+
+- **install.sh 幂等检测误入交互**: 已安装 zentao 时，`curl|sh` 管道（无 TTY）不再直接 `exec zentao install`，改为提示用户手动运行。
+- **install 子命令非交互模式误调 login/add-skill**: `runPostInstallFlow` 在非交互模式下跳过需要 TTY 输入的 login/add-skill，改为输出提示，避免管道 EOF 导致的无效调用与误报。
+
+## 0.2.3
+
+### 🐛 修复 (Fix)
+
+- **install 交互式问答**: `ask`/`confirm` 改用 `rl.once('line')` 替代 `rl.question`，避免连续调用时因 readline 内部缓冲残留导致第二个问题立即返回空值而跳过登录/技能安装；`createInterface` 的 `output` 由 `stderr` 改为 `stdout` 并显式设置 `terminal`，修复 TTY 回显错乱。
+
+## 0.2.2
+
+### 🐛 修复 (Fix)
+
+- **curl\|sh 管道安装**: `install.sh` 改为先 `npm install -g` 全局安装，再调用 `zentao install`，替代原先的 `npx` 临时执行方式；避免 `install` 子命令内部调用 `zentao login`/`zentao add-skill` 时因 `zentao` 未进 PATH 而报 `command not found`。
+- **install 子命令误判**: `getInstalledCliVersion` 先用 `which`/`where` 确认 `zentao` 真实存在于 PATH，避免命中 npx shell 缓存导致的误判；新增 `isInteractiveStdin` 检测 stdin TTY，`curl|sh` 管道下强制走非交互路径执行覆盖升级，而非误跳过安装。
+
+## 0.1.9
+
+### ✨ 新特性 (Feat)
+
+- **Bug 指派字段**: `bug create` / `bug update` 的请求体 schema 补齐 `assignedTo`，创建或更新 Bug 时可直接指定指派人。
+
+### 🐛 修复 (Fix)
+
+- **版本更新检测**: `update` 解析最新版本时优先稳定版并跳过 prerelease，避免把预发布版本误报为可更新目标。
+
+### 🚀 优化与重构 (Refactor)
+
+- **zentao-api SDK 接入**: HTTP 客户端、模块注册表、请求解析与执行链路改为依赖外部 `zentao-api` 包；CLI 聚焦命令解析、渲染、配置与 MCP。
+- **依赖精简**: 移除 `dot-prop` 与本地 `update-registry` 脚本，模块定义改由 SDK 提供。
+- **npm 包名改为 scoped**: 发布包名由 `zentao-cli` 调整为 `@kerin/zentao-cli`（`bin` 命令仍为 `zentao`）；安装、升级检测与 MCP 启动配置同步更新。
+
+### ✅ 测试 (Test)
+
+- **测试套件适配**: 更新 API / executor / modules / MCP 等相关测试，覆盖 SDK 架构与 `assignedTo` schema 行为。
+
+### 📝 文档 (Docs)
+
+- **架构说明**: 文档改为描述 zentao-api 分层，移除过时的 OpenAPI 生成相关表述。
+- **安装指引**: README / Agents 文档 / 技能说明中的安装与 `npx` 示例改为 `@kerin/zentao-cli`。
+
+### 🤸 技能更新（Skill）
+
+- **zentao-cli**:
+  - 安装命令改为 `@kerin/zentao-cli`，技能版本同步至 0.1.9。
+- **zentao-tour**:
+  - 速览文档中的安装与 MCP 配置包名同步为 `@kerin/zentao-cli`，技能版本同步至 0.1.9。
+
+## 0.1.8
+
+### 🚀 优化与重构 (Refactor)
+
+- **登录模块拆分**: 将 token 校验逻辑抽取为独立的 `verifyToken`，并将环境变量读取逻辑抽取为 `getEnvCredentials`，提升可复用性与可测试性，外部行为保持不变。
+
+### ✅ 测试 (Test)
+
+- **auth 单元测试**: 新增 `tests/auth.test.ts`，基于本地 mock 服务覆盖 `verifyToken` 的关键分支（用户命中/未命中、`/users` 401、空列表、缺失字段、`/server/config` 5xx、Token 头与查询参数）以及 `getEnvCredentials` 在环境变量缺失/设置下的读取行为。
+
+### 📝 文档 (Docs)
+
+- **release 工作流**: 在 `/release` 斜杠命令中新增可选的 npm 发布步骤，统一发布 CLI 包到 npm 的操作流程。
+- **提交规范**: AGENTS.md 明确要求提交信息必须使用英文，统一项目协作规范。
+
+## 0.1.7
+
+### ✨ 新特性 (Feat)
+
+- **更新操作自动补全**: 模块命令的 update 操作在执行前会自动读取当前对象，并将缺失字段补全到提交数据中，避免因仅提交部分字段而导致后端校验失败或数据被清空。
+
+### ✅ 测试 (Test)
+
+- **executor 测试**: 新增覆盖 update 操作自动补全行为及错误路径的单元测试。
+
+### 📝 文档 (Docs)
+
+- **release 工作流**: 新增 `/release` 斜杠命令，将版本号确定、`CHANGES.md` 更新与 git tag 打包成标准化的发布流程，并在工作流中加入技能版本号同步步骤。
+
+### 🤸 技能更新（Skill）
+
+- **zentao-cli**:
+  - 更新 update 操作的参数说明，明确缺失字段会从当前对象自动补全，无需手动重复传入完整字段。
+
+## 0.1.6
+
+### 🤸 技能更新（Skill）
+
+- **凭证安全**: 新增凭证安全提示，严禁主动读取本地保存的禅道密码和 Token，包括环境变量 `ZENTAO_PASSWORD` 和 `ZENTAO_TOKEN`，以及配置文件 `~/.config/zentao/zentao.json` 中的数据，一切数据都通过 `zentao` 命令获取。
+
+## 0.1.5
+
+### 🚀 优化与重构 (Refactor)
+
+- **批量 ID 处理**: 新增 `splitNumericIds` 与 `pickBatchIds` 工具函数，支持模块命令中批量 ID 的解析与处理；增强删除操作的交互确认逻辑以适配批量场景。
+- **模块命令执行重构**: 引入 `renderModuleExecution` 统一管理命令执行与输出格式化，精简冗余函数，提升代码可读性与可维护性。
+- **死代码清理**: 移除各模块及命令逻辑中未使用的工具函数导出与冗余代码。
+- **依赖升级**: 升级 `@types/bun` 和 `bun-types` 至 1.3.13；新增类型检查、覆盖率及 CI 自动化脚本。
+
+### ✅ 测试 (Test)
+
+- **单元测试扩展**: 新增共享测试辅助模块 `tests/helpers.ts`；`api.test.ts` 从 4 项扩展至 21 项测试（含 mock 服务、Token、HTTP 错误、超时等场景）；新增 `config.test.ts` 共 24 项配置管理测试；`data.test.ts` 与 `mcp-schema.test.ts` 补充多项边界用例。
+- **MCP 端到端测试增强**: 为 `zentao_bug` 工具新增 `readOnlyHint` 与 `destructiveHint` 注解属性断言。
+
+### 📝 文档 (Docs)
+
+- **CLAUDE.md**: 新建并持续优化 AI 辅助开发参考文档，涵盖项目概览、命令用法、架构细节、提交规范与测试指南。
+- **文档结构重组**: 集中整理文档目录，移除遗留的静态引导页 `index.html`。
+
+## 0.1.4
+
+### ✨ 新特性 (Feat)
+
+- **--help 标志支持**: 为模块命令新增 `--help` / `-h` 标志支持，解析器可智能识别标志后的操作名称（含别名），并展示对应操作的详细帮助信息。
+
+### 🐛 修复 (Fix)
+
+- **错误码修正**: 修复模块命令解析器中路径参数缺失时错误抛出 `E2004` 的问题，现正确抛出 `E2003`（缺少必要参数）。
+- **任务列表路径修正**: 将任务列表 API 路径从泛化的 `/{scope}/{scopeID}/tasks` 简化为 `/executions/{executionID}/tasks`，移除多余的 scope 参数抽象。
+- **错误提示一致性**: 将错误信息中的帮助命令引用从 `--help` 统一修正为 `help` 子命令形式。
+
+### 📝 文档 (Docs)
+
+- **README 更新**: 将帮助命令示例从 `--help` 标志统一修正为 `help` 子命令，与 CLI 实际行为保持一致。
+- **SKILL.md 更新**: 完善错误码表中的帮助命令引用，补充模块与操作级别的帮助查看方式说明。
+
+## 0.1.3
+
+### ✨ 新特性 (Feat)
+
+- **访问控制默认值**: 为模块定义中的 `acl` 字段补充默认值 `open`，简化访问控制配置并提升创建参数的可用性。
+
+
+## 0.1.2
+
+### ✨ 新特性 (Feat)
+
+- **版本查询别名**: 支持 `zentao --version` 命令别名，可同时显示 CLI 版本与禅道服务器版本信息。
+- **数组类型解析**: 增强模块命令解析器，新增对数组元素类型（array item types）的识别与处理，并完善了对 `undefined` 值的兼容。
+
+### 📝 文档 (Docs)
+
+- **README 更新**: 补充更多主流 AI Agent 平台的技能安装说明，并增加 `zentao-cli` 升级命令示例。
+
+## 0.1.2-beta.9
+
+### ✨ 新特性 (Feat)
+
+- **多技能目录支持**: 重构 `add-skill` 安装流程，支持在同一技能仓库中管理和递归复制多个技能目录。
+- **禅道新手导览**: 新增 `zentao-tour` 技能文档，提供按角色（产品经理/项目经理/测试/开发/高管）分类的上手引导。
+- **模块命令别名**: 为模块注册系统增加命令别名映射，提升命令输入的灵活性与容错能力。
+
+### 🐛 修复 (Fix)
+
+- **安装命令修正**: 修正了 README 中技能安装命令的冗余参数。
+
+## 0.1.2-beta.8
+
+### ✨ 新特性 (Feat)
+
+- **帮助命令增强**: 优化 `zentao help <module>` 命令逻辑，支持 CRUD 操作别名识别（如 `ls` → `list`），改善 Action 解析的准确性与用户体验。
+
+## 0.1.2-beta.7
+
+### ✨ 新特性 (Feat)
+
+- **计划关联字段**: 在模块定义中新增 `plan` 字段，支持创建需求时关联产品计划；同时将 `category` 类型调整为 `string` 以增强扩展性。
+- **类型校验错误码**: 新增错误码 `E2010` 用于 `resolveModuleCommand` 中的参数类型校验，并增强了参数处理逻辑。
+
+### 📝 文档 (Docs)
+
+- **技能文件更新**: 在 SKILL.md 中补充了需求创建时关联计划的说明。
+
+## 0.1.2-beta.6
+
+### ✨ 新特性 (Feat)
+
+- **命令行中文化**: 对帮助输出信息进行了本地化适配，将命令描述文本全面更新为中文。
+
+### 🐛 修复 (Fix)
+
+- **类型检查修正**: 修复 `resolveModuleCommand` 中 `data` 参数的类型检查逻辑，确保对象类型被正确处理。
+- **描述格式修正**: 修正模块注册中的描述文本格式化问题，提升可读性。
+
+### 🚀 优化与重构 (Refactor)
+
+- **认证流程精简**: 移除了认证流程中的 Token 校验逻辑，简化登录鉴权过程。
+- **Bun 环境检测**: 精简 Bun 运行环境检测代码，移除冗余逻辑，改为直接导入 `bunMarkdownEnable`。
+- **动态版本获取**: 将硬编码的 `BUILD_VERSION` 替换为 `getCliVersion` 函数，实现运行时动态获取版本号。
+- **类型定义更新**: 更新模块类型定义（`ModuleDefinition`），同步项目路线图文档。
+
+### 📝 文档 (Docs)
+
+- **README 完善**: 改善了 README 中首次登录与命令使用的说明清晰度，修正 `ZENTAO_TOKEN` 描述的格式，优化 AI 技能使用说明。
+
+## 0.1.2-beta.5
+
+### ✨ 新特性 (Feat)
+
+- **自定义配置路径**: 支持配置数据存储路径以满足不同运行环境的要求。
+- **模块帮助命令**: 新增 `zentao help <module>` 命令，用于显示各模块的具体命令用法与操作支持情况。
+- **列表截断支持**: 增强列表操作执行逻辑，支持在查询列表时限制返回数量。
+
+### 🐛 修复 (Fix)
+
+- **参数解析**: 优化了模块命令执行过程中的参数解析能力，支持通过附加参数解析 JSON 数据，并补充了缺少参数时的降级获取机制（如 `pageID`, `scopeID` 和 `order`）。
+- **客户端完善**: 增强了 API 客户端层面的错误处理，并改善了鉴权逻辑（更健壮的 Token 校验）。
+- **分页信息修复**: 修复了格式化分页信息在数据集为空时抛出异常的问题。
+
+### 🚀 优化与重构 (Refactor)
+
+- **路径解析**: 移除冗余的列表路径解析器 `resolveListPathParams` 以简化处理流程。
+- **代码清理**: 移除了无用类型文件和冗余的控制台调试日志输出。
+
+### 📝 文档 (Docs)
+
+- **README 更新**: 完善了对象预设字段表和国际化（i18n）相关的文档内容，并增加了功能待办进度清单。
+- **技能文件**: 更新了针对 Agent 使用的技能文档 (`zentao-cli` skill)。
+
+## 0.1.2-beta.4
+
+### 🚀 优化与重构 (Refactor)
+
+- **版本更新检测**: 采用更严谨的 SemVer 规范对比逻辑（支持 alpha、beta 等预发布版本的比较），提高更新提示的准确性。
+- **环境检测适配**: 升级包管理器检测机制，能更精准地识别 npm、yarn、pnpm 或 bun，并针对不同平台（支持 Windows）生成正确的跨平台更新安装命令。
+
+### 📝 文档 (Docs)
+
+- **文档结构重构**: 优化说明文档结构，将技术实现细节、开发指南、错误码和架构设计等独立拆分至 `docs/` 目录下，精简 `README.md` 的内容。
+- **路线图**: 更新了 `PLAN.md` 文件中的项目路线图与待办任务优先级。
+
+### ✅ 测试 (Test)
+
+- **单元测试**: 为语义化版本（SemVer）的解析、版本对比以及跨平台安装命令生成补充了完整的单元测试，保证逻辑的可靠性。
+
+## 0.1.2-beta.3
+
+### ✨ 新特性 (Feat)
+
+- **自动检查更新**: 增加了每天首次使用的自动版本检查与更新提示机制。
+- **命令行升级**: 新增 `upgrade` 命令，支持一键检测并通过 npm 等包管理器自动升级。
+- **Agent 支持拓展**: 在 `add-mcp` 与 `add-skill` 环境配置命令中增加了对 Antigravity 和 Gemini Agent 的配置集成支持。
+
+### 🚀 优化与重构 (Refactor)
+
+- **更新命令重命名**: 将原来的更新命令统一规范重命名为 `upgrade` 以保持与包管理器语义一致。
+- **UI 优化**: 改善命令行输出，移除了更新提示文本外围的边框以保持样式简洁。
+
+## 0.1.2-beta.2
+
+### 🐛 修复 (Fix)
+
+- **登录流程优化**: 重构 `promptLogin` 函数中的账号密码交互式输入，全面切换为 Promise (async/await) 异步支持机制，提升了终端命令行的交互稳定性。
+
+### 📝 文档 (Docs)
+
+- **补充文档**: 更新完善了项目的 HTML 文档引导页 (`index.html`)。
+
+## 0.1.2-beta.1
+
+### ✨ 新特性 (Feat)
+
+- **MCP 服务配置**: 实现了全新的 `add-mcp` 命令，可用于一键配置和挂载基于 MCP 协议的本地 AI Agent 支持服务（支持 VS Code / Cursor 等配置一键注入）。
+- **账号操作支持**: 新增了暴露给 MCP 生态的 `zentao_switch_profile` 工具支持动态切换工作区账户，以及 `zentao_profile` 获取当前认证账号状态的内置工具功能。
+- **扩展 Agent 平台**: 工具配置向导 `add-skill` 中兼容加入了面向 **Cherry Studio** 用户端技能集成的指令选项。
+
+### 📝 文档 (Docs)
+
+- **集成指南**: 对说明文档和 SDK Skill 进行了一次结构梳理修订，全面提供了主流 Agent 环境的使用配置指南。
+- **静态主页**: 增加了静态分发的主体引导页 `index.html`。
+
+## 0.1.2-beta.0
+
+### ✨ 新特性 (Feat)
+
+- **MCP Server 模块**: 正式加入模型上下文协议（Model Context Protocol）能力引擎代码。通过 `zentao mcp` 暴露标准 MCP stdio 服务，允许 AI Agent 直连禅道系统的所有生态模块。
+- **交互式向导式登录**: 重写了命令行认证机制体验，废弃同步 URL 输入改为异步 `readline` 向导模式。
+
+### 🐛 修复 (Fix)
+
+- **Schema 处理**: 调整了传入 MCP 服务时的 API 参数 Schema，强制其类型结构转换为 String Keys 以匹配 JSON Schema 标准。
+- **隐式传参支持**: 在 `resolver` 参数解析器中加入了对额外匿名参数的识别与映射兼容逻辑。
+
+### 🚀 优化与重构 (Refactor)
+
+- **指令梳理**: 对系统日志命令 `help` 数据项的输出进行了修正排版和不必要的标记删除操作，独立提取抽离了 CLI 版本获取方法 `getCliVersion`。
+
+### ✅ 测试 (Test)
+
+- **端到端测试**: 为新增的 MCP 模块机制补齐了功能链工具发现集成测试和输入模式的 Schema 边界验证。
+
+## 0.1.1-beta.0
+
+### ✨ 新特性 (Feat)
+
+- **技能辅助生成**: 引入 `add-skill` 全局命令用来为支持各种语境能力的 AI Agents 注入相应的辅助配置文件及指南文本。
+- **管道集成模式**: 引入 `--machine-readable` 全局参数用来关闭全部的终端颜色控制与表格排版符输出，供非 TTY 主机自动化流操作兼容使用。
+- **命令补全**: 强化所有自动补全 `autocomplete` 辅助脚本以涵盖最新的新增命令分支。
+
+### 🐛 修复 (Fix)
+
+- **异常捕获分析**: 全局增强底层数据层 `ZentaoClient` 拦截并完整暴露抛出含有详细报文状态、执行接口路径的高亮报错跟踪信息。
+- **分页栏排版**: 优化底层日志拦截组件在命令行空行渲染的断句换行异常显示粘连。
+
+### 🚀 优化与重构 (Refactor)
+
+- **指令路由规范**: 将散落的基础 CRUD 处理器逻辑抽象层重构成大一统入口解析执行流；调整部分无显示工作区范围参数自动继承的回落错误（追加了对于不合法空值抛出 `E2009` 断言的机制）。
+
+## 0.1.0-beta.0
+
+### ✨ 初始预发布版本 (Initial Pre-release)
+
+- **新项目及命令确立**: 框架主入口确认命名为 `zentao-cli` 发布。
+- **元数据编译转化**: 将系统官方提供 `openapi.json` 编译输出到静态命令的数据支持配置仓库（Data registries）。
+- **复合鉴权系统**: 支持配置包含 Token 与常规账号密码的双轨组合，附有交互向导与终端用户环境加密隔离的文件持久化验证引擎。
+- **自动智能补全**: 原生植入 bash / zsh 的环境变量按 `Tap` 自动探测的高亮补齐代码支持机制。
+- **工作区域切换**: 引入了隔离式 `workspace` 集群环境控制组件系统。

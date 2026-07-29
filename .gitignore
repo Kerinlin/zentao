@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+release/
+
+# Coverage
+coverage/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Pack
+*.tgz
+
+# Local config
+*.local
+*.local.*
+.env
+.env.*
+!.env.example
+
+# VitePress
+**/.vitepress/cache/
+**/.vitepress/dist/
+
+# Alternate package managers — this repo uses bun.lock only
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

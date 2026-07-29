@@ -1,0 +1,15 @@
+node_modules/
+dist/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+coverage/
+*.log
+.DS_Store
+*.tgz
+*.local
+*.local.*
+
+# Alternate package managers — this repo uses bun.lock only
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

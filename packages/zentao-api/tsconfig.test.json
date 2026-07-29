@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "noEmit": true,
+    "rootDir": ".",
+    "types": ["node", "bun"],
+    // 测试与脚本由 Bun 直接执行，沿用 Bundler 解析，避免在测试源里到处补 `.js` 后缀。
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    // post-build 冒烟：依赖 package exports → dist；且若用 paths 映射源码，
+    // Bun 跑 .ts 时会把 zentao-api/browser 解析到 src（VERSION=0.0.0-dev）导致误报。
+    "scripts/smoke-package.ts",
+    "scripts/smoke-browser-bundler.ts"
+  ]
+}

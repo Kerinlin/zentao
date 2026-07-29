@@ -1,0 +1,305 @@
+import { z } from 'zod';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { getAllModules } from '../modules/helper.js';
+import type { ModuleDefinition, ModuleAction, ModuleActionOptions } from '../types/index.js';
+import { executeModuleCommand } from '../modules/executor.js';
+import { ZentaoError } from '../errors.js';
+import type { AuthProvider } from './server.js';
+import { getCurrentProfile, getProfileConfig, setCurrentProfile, profileKey } from '../config/store.js';
+import { DEFAULT_CONFIG } from '../config/defaults.js';
+
+function buildToolDescription(mod: ModuleDefinition): string {
+    const actions = mod.actions.map(a => a.name);
+    const parts: string[] = [];
+    if (mod.description) {
+        parts.push(mod.description);
+    } else {
+        parts.push(`${mod.display ?? mod.name} 管理`);
+    }
+    parts.push(`支持操作: ${actions.join(', ')}`);
+
+    const listAction = mod.actions.find(a => a.type === 'list');
+    if (listAction?.pathParams && 'scope' in listAction.pathParams) {
+        const scopeDef = listAction.pathParams.scope;
+        if (typeof scopeDef === 'object' && scopeDef.options) {
+            const scopes = scopeDef.options.map((o: { value: unknown; label: string }) =>
+                `--${String(o.value).replace(/s$/, '')}`
+            );
+            parts.push(`列表范围参数: ${scopes.join(', ')}`);
+        } else {
+            parts.push('列表范围参数: --product, --project, --execution');
+        }
+    }
+
+    return parts.join('。');
+}
+
+function buildActionEnum(mod: ModuleDefinition): [string, ...string[]] {
+    const names = mod.actions.map(a => a.name);
+    return [names[0], ...names.slice(1)];
+}
+
+function buildInputSchema(mod: ModuleDefinition): Record<string, z.ZodTypeAny> {
+    const actionEnum = buildActionEnum(mod);
+    const schema: Record<string, z.ZodTypeAny> = {
+        action: z.enum(actionEnum).describe('要执行的操作。' + mod.actions.map(a =>
+            `${a.name}: ${a.display ?? a.name}`
+        ).join('; ')),
+        id: z.number().optional().describe('对象 ID（get/update/delete 及扩展操作必填）'),
+        product: z.number().optional().describe('产品 ID（范围参数）'),
+        project: z.number().optional().describe('项目 ID（范围参数）'),
+        execution: z.number().optional().describe('执行 ID（范围参数）'),
+        params: z.record(z.string(), z.unknown()).optional().describe('API 参数键值对，用于传递操作所需字段（如 title, severity 等）'),
+        pick: z.string().optional().describe('摘取字段（逗号分隔）'),
+        filter: z.array(z.string()).optional().describe('过滤条件（如 status:active, severity<=2, assignedTo=pgoyc）。注意：filter 为客户端过滤，仅作用于当前页数据；跨页请用服务端参数如 browseType'),
+        sort: z.string().optional().describe('排序（如 pri_asc, severity_desc）'),
+        search: z.array(z.string()).optional().describe('搜索关键词'),
+        searchFields: z.string().optional().describe('搜索字段（逗号分隔），配合 search 使用'),
+        page: z.number().optional().describe('页码'),
+        recPerPage: z.number().optional().describe('每页条数'),
+    };
+
+    // 动态暴露 list action 声明的服务端查询参数（如 browseType, orderBy）。
+    // 让用户直接用服务端过滤（如 browseType=assignedtome 查"指派给我"），
+    // 避免被迫客户端拉全量，也避免低权限账号因全量拉取失败导致 filter 失真。
+    const listAction = mod.actions.find(a => a.type === 'list');
+    for (const param of listAction?.params ?? []) {
+        if (param.name === 'recPerPage' || param.name === 'pageID') continue;
+        if (schema[param.name]) continue;
+        const parts: string[] = [];
+        if (param.description) parts.push(param.description);
+        if (param.options?.length) {
+            parts.push(`可选值: ${param.options.map(o => `${o.value}(${o.label})`).join(', ')}`);
+        }
+        if (param.defaultValue !== undefined) parts.push(`默认: ${param.defaultValue}`);
+        schema[param.name] = z.string().optional().describe(parts.join('。') || param.name);
+    }
+
+    return schema;
+}
+
+interface ToolInput {
+    action: string;
+    id?: number;
+    product?: number;
+    project?: number;
+    execution?: number;
+    params?: Record<string, unknown>;
+    pick?: string;
+    filter?: string[];
+    sort?: string;
+    search?: string[];
+    searchFields?: string;
+    page?: number;
+    recPerPage?: number;
+}
+
+async function handleProfileTool(auth: AuthProvider): Promise<CallToolResult> {
+    const client = await auth.getClient();
+    const profile = getCurrentProfile();
+    const account = profile?.account;
+
+    let user: Record<string, unknown> | undefined;
+    try {
+        const usersResp = await client.get<Record<string, unknown>>('/users', {
+            query: { browseType: 'inside', recPerPage: 100 },
+        });
+        const usersRaw = (usersResp as Record<string, unknown>).users;
+        const users = Array.isArray(usersRaw) ? usersRaw as Array<Record<string, unknown>> : [];
+        user = account
+            ? users.find((item) => String(item.account ?? '') === account)
+            : undefined;
+    } catch {
+        // 低权限账号可能无法访问 /users 列表接口，忽略错误，回落到 profile 信息。
+    }
+
+    // profile.user 可能为空对象，account 兜底。
+    const fallback = account ? { account } : {};
+    const result = user ?? (profile?.user && Object.keys(profile.user).length > 0 ? profile.user : fallback);
+
+    return {
+        content: [{
+            type: 'text',
+            text: JSON.stringify(result, null, 2),
+        }],
+    };
+}
+
+interface SwitchProfileInput {
+    profileKey: string;
+}
+
+async function handleSwitchProfileTool(input: SwitchProfileInput, auth: AuthProvider): Promise<CallToolResult> {
+    const success = setCurrentProfile(input.profileKey);
+    if (!success) {
+        throw new ZentaoError('E1007');
+    }
+
+    auth.resetClient();
+    await auth.getClient();
+
+    const current = getCurrentProfile();
+    const currentKey = current ? profileKey(current.account, current.server) : input.profileKey;
+    return {
+        content: [{
+            type: 'text',
+            text: JSON.stringify({
+                status: 'success',
+                currentProfile: currentKey,
+            }, null, 2),
+        }],
+    };
+}
+
+async function handleModuleTool(
+    mod: ModuleDefinition,
+    input: ToolInput,
+    auth: AuthProvider,
+): Promise<CallToolResult> {
+    const client = await auth.getClient();
+    const profile = getCurrentProfile();
+    const config = profile ? getProfileConfig(profile) : DEFAULT_CONFIG;
+    const actionName = input.action;
+
+    // 收集 list action 声明的服务端查询参数（如 browseType/orderBy），走 params JSON 通道下发。
+    // 这样服务端过滤能直接生效（例如 browseType=assignedtome 只返回当前账号被指派的数据）。
+    const dynamicParams: Record<string, unknown> = {};
+    const listAction = mod.actions.find(a => a.type === 'list');
+    const inputRecord = input as Record<string, unknown>;
+    for (const param of listAction?.params ?? []) {
+        if (param.name === 'recPerPage' || param.name === 'pageID') continue;
+        const val = inputRecord[param.name];
+        if (val !== undefined && val !== null) dynamicParams[param.name] = val;
+    }
+    const mergedParams = { ...(input.params ?? {}), ...dynamicParams };
+
+    const opts: ModuleActionOptions = {
+        id: input.id != null ? String(input.id) : undefined,
+        product: input.product != null ? String(input.product) : undefined,
+        project: input.project != null ? String(input.project) : undefined,
+        execution: input.execution != null ? String(input.execution) : undefined,
+        params: Object.keys(mergedParams).length ? JSON.stringify(mergedParams) : undefined,
+        pick: input.pick,
+        filter: input.filter,
+        sort: input.sort,
+        search: input.search,
+        searchFields: input.searchFields,
+        page: input.page != null ? String(input.page) : undefined,
+        recPerPage: input.recPerPage != null ? String(input.recPerPage) : undefined,
+        format: 'json',
+        yes: true,
+    };
+
+    const execution = await executeModuleCommand(client, mod, actionName, [], opts, config);
+
+    if (execution.action.type === 'list') {
+        const response: Record<string, unknown> = { data: execution.data };
+        if (execution.pager) response.pager = execution.pager;
+        const content: CallToolResult['content'] = [{
+            type: 'text',
+            text: JSON.stringify(response, null, 2),
+        }];
+        // 空响应告警：recTotal=0 时区分"真的没数据"和"参数被服务端拒绝/无权限"。
+        // 服务端在某些 recPerPage/page 组合下会静默返回空，低权限账号也会被静默拒数据。
+        if (execution.pager && execution.pager.recTotal === 0) {
+            content.push({
+                type: 'text',
+                text: '提示：服务端未返回任何数据（recTotal=0）。可能原因：账号无权限访问该 scope、scope ID 无效、或参数（如 recPerPage/page）被服务端拒绝。建议：1) 用 zentao_profile 确认当前账号；2) 改用 browseType=assignedtome 查询当前账号可见数据；3) 尝试 recPerPage=300。',
+            });
+        }
+        return { content };
+    }
+
+    if (execution.action.type === 'get') {
+        return { content: [{ type: 'text', text: JSON.stringify(execution.data, null, 2) }] };
+    }
+
+    // create / update / delete / action
+    return { content: [{ type: 'text', text: JSON.stringify(execution.data ?? execution.rawResponse, null, 2) }] };
+}
+
+function toolAnnotations(actions: readonly ModuleAction[]) {
+    const readOnly = actions.every(action => action.type === 'list' || action.type === 'get');
+    const destructive = actions.some(action => action.type === 'delete');
+    return {
+        readOnlyHint: readOnly,
+        destructiveHint: destructive,
+        openWorldHint: true,
+    };
+}
+
+export function registerModuleTools(server: McpServer, auth: AuthProvider): void {
+    server.tool(
+        'zentao_profile',
+        '获取当前登录禅道账号信息',
+        {},
+        { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
+        async () => {
+            try {
+                return await handleProfileTool(auth);
+            } catch (error) {
+                if (error instanceof ZentaoError) {
+                    return {
+                        isError: true,
+                        content: [{ type: 'text', text: `E${error.code}: ${error.message}` }],
+                    };
+                }
+                return {
+                    isError: true,
+                    content: [{ type: 'text', text: (error as Error).message ?? String(error) }],
+                };
+            }
+        },
+    );
+
+    server.tool(
+        'zentao_switch_profile',
+        '切换当前登录账号（等价于 switch-profile）',
+        {
+            profileKey: z.string().describe('目标用户配置标识，支持 account@server、account 或 account@hostname'),
+        },
+        { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
+        async (input) => {
+            try {
+                return await handleSwitchProfileTool(input as SwitchProfileInput, auth);
+            } catch (error) {
+                if (error instanceof ZentaoError) {
+                    return {
+                        isError: true,
+                        content: [{ type: 'text', text: `E${error.code}: ${error.message}` }],
+                    };
+                }
+                return {
+                    isError: true,
+                    content: [{ type: 'text', text: (error as Error).message ?? String(error) }],
+                };
+            }
+        },
+    );
+
+    for (const mod of getAllModules()) {
+        const name = `zentao_${mod.name}`;
+        const description = buildToolDescription(mod);
+        const inputSchema = buildInputSchema(mod);
+
+        const annotations = toolAnnotations(mod.actions);
+
+        server.tool(name, description, inputSchema, annotations, async (input) => {
+            try {
+                return await handleModuleTool(mod, input as ToolInput, auth);
+            } catch (error) {
+                if (error instanceof ZentaoError) {
+                    return {
+                        isError: true,
+                        content: [{ type: 'text', text: `E${error.code}: ${error.message}` }],
+                    };
+                }
+                return {
+                    isError: true,
+                    content: [{ type: 'text', text: (error as Error).message ?? String(error) }],
+                };
+            }
+        });
+    }
+}

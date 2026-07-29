@@ -1,0 +1,26 @@
+{
+  "name": "zentao-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "build:api": "cd packages/zentao-api && bun run build",
+    "build": "cd packages/zentao-api && bun run build && cd ../../packages/zentao-cli && bun run build",
+    "build:sf": "cd packages/zentao-api && bun run build && cd ../../packages/zentao-cli && bun run build:sf",
+    "test": "cd packages/zentao-api && bun test && cd ../../packages/zentao-cli && bun test",
+    "typecheck": "cd packages/zentao-api && bun run typecheck && cd ../../packages/zentao-cli && bun run typecheck",
+    "dev": "cd packages/zentao-cli && bun run dev",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "publish:pkgs": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.12",
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "bun@1.3.13",
+  "engines": {
+    "node": ">=18",
+    "bun": ">=1.3.13"
+  }
+}
