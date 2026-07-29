@@ -166,7 +166,7 @@ async function handleModuleTool(
     // 这样服务端过滤能直接生效（例如 browseType=assignedtome 只返回当前账号被指派的数据）。
     const dynamicParams: Record<string, unknown> = {};
     const listAction = mod.actions.find(a => a.type === 'list');
-    const inputRecord = input as Record<string, unknown>;
+    const inputRecord = input as unknown as Record<string, unknown>;
     for (const param of listAction?.params ?? []) {
         if (param.name === 'recPerPage' || param.name === 'pageID') continue;
         const val = inputRecord[param.name];
@@ -287,7 +287,7 @@ export function registerModuleTools(server: McpServer, auth: AuthProvider): void
 
         server.tool(name, description, inputSchema, annotations, async (input) => {
             try {
-                return await handleModuleTool(mod, input as ToolInput, auth);
+                return await handleModuleTool(mod, input as unknown as ToolInput, auth);
             } catch (error) {
                 if (error instanceof ZentaoError) {
                     return {
