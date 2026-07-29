@@ -7,8 +7,11 @@
 #   # 或已 clone 仓库后在本机直接跑:
 #   sh packages/zentao-cli/scripts/install-gitea.sh
 #
-# Windows 请用同目录 install-gitea.ps1:
+# Windows 小白请用同目录 install-gitea.ps1（不需要 git，只下预编译 exe）:
 #   irm http://192.168.0.147:3000/pgiot/zentao/raw/branch/main/packages/zentao-cli/scripts/install-gitea.ps1 | iex
+#
+# 管理员先发布 Windows 包（Gitea Release tag=cli 上传 zentao-cli-windows-x64.exe）:
+#   cd packages/zentao-cli && bun run build:sf -- --targets=windows-x64
 #
 # 环境变量（均可选）:
 #   GITEA_BASE     Gitea HTTP 根地址，默认 http://192.168.0.147:3000
