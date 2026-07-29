@@ -1,10 +1,10 @@
 #!/usr/bin/env sh
 # zentao-cli 一键安装脚本（macOS / Linux）
 # 用法:
-#   curl -fsSL https://raw.githubusercontent.com/Kerinlin/zentao-cli/main/scripts/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/Kerinlin/zentao/main/packages/zentao-cli/scripts/install.sh | sh
 #   或 wget -qO- <同上> | sh
 #
-# 设计原则: 瘦引导。只做「检测 Node → 必要时装 Node → 调用 npx @kerin/zentao-cli install」。
+# 设计原则: 瘦引导。只做「检测 Node → 必要时装 Node → npm install -g 全局安装 → 调用 zentao install」。
 # 所有交互逻辑集中在 TS 子命令里，单一事实源。
 
 set -e

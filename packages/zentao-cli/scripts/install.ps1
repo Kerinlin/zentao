@@ -1,8 +1,8 @@
 # zentao-cli 一键安装脚本（Windows PowerShell）
 # 用法:
-#   irm https://raw.githubusercontent.com/Kerinlin/zentao-cli/main/scripts/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/Kerinlin/zentao/main/packages/zentao-cli/scripts/install.ps1 | iex
 #
-# 设计原则: 瘦引导。只做「检测 Node → 必要时装 Node → 调用 npx @kerin/zentao-cli install」。
+# 设计原则: 瘦引导。只做「检测 Node → 必要时装 Node → npm install -g 全局安装 → 调用 zentao install」。
 
 $ErrorActionPreference = 'Stop'
 
@@ -118,13 +118,19 @@ function Main {
     }
     Write-Info "检测到 Node $(node --version)"
 
-    Write-Info "通过 npx 启动 zentao-cli install..."
-    Write-Host ''
-    & npx --yes $PackageName install @args
-    if ($LASTEXITCODE -ne 0) {
-        Die '安装失败，请查看上方日志。'
+    Write-Info "全局安装 $PackageName@latest ..."
+    npm install -g "$PackageName@latest"
+    if ($LASTEXITCODE -ne 0) { Die 'npm 全局安装失败，请查看上方日志。' }
+    Update-CurrentPath
+
+    if (-not (Test-Command zentao)) {
+        Die '安装完成但 zentao 命令未生效，请重启 PowerShell 后手动运行: zentao install'
     }
-    Write-Info '安装完成。请重启 PowerShell 以使 PATH 完全生效。'
+
+    Write-Info 'zentao-cli 安装成功！'
+    Write-Host ''
+    Write-Info '进入交互式配置...'
+    & zentao install @args
 }
 
 Main

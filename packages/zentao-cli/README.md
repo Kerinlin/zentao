@@ -34,13 +34,13 @@
 **macOS / Linux:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Kerinlin/zentao-cli/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Kerinlin/zentao/main/packages/zentao-cli/scripts/install.sh | sh
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-irm https://raw.githubusercontent.com/Kerinlin/zentao-cli/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/Kerinlin/zentao/main/packages/zentao-cli/scripts/install.ps1 | iex
 ```
 
 > 若未检测到 Node.js 18+，脚本会询问并自动安装 Node 22 LTS（macOS 走 brew 或官方 .pkg；Windows 走 winget/choco 或官方 MSI；Linux 走 apt/dnf/yum/apk 或官方 tar）。
