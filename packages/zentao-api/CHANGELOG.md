@@ -1,5 +1,11 @@
 # @kerin/zentao-api
 
+## 1.3.1
+
+### Patch Changes
+
+- 8943ebe: fix: 修复 product 与 productID 别名导致 Bug 创建归属错误
+
 ## 1.3.0
 
 ### Minor Changes
