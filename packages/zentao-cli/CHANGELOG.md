@@ -1,5 +1,18 @@
 # @kerin/zentao-cli
 
+## 1.3.0
+
+### Minor Changes
+
+- b5801e8: feat: 支持 Markdown 步骤文件与安装交互优化
+- 7eecf27: + support `--steps-file` to load Markdown steps and convert to ZenTao light HTML
+  - auto-infer product into workspace when adding/setting workspace with only `--project` (via project bugs/stories fallback for hasProduct=0)
+
+### Patch Changes
+
+- Updated dependencies [b5801e8]
+  - @kerin/zentao-api@1.3.0
+
 ## 1.2.0
 
 ### Minor Changes
