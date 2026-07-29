@@ -5,6 +5,7 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "build:api": "cd packages/zentao-api && bun run build",
+    "watch:api": "cd packages/zentao-api && bunx tsc --watch",
     "build": "cd packages/zentao-api && bun run build && cd ../../packages/zentao-cli && bun run build",
     "build:sf": "cd packages/zentao-api && bun run build && cd ../../packages/zentao-cli && bun run build:sf",
     "test": "cd packages/zentao-api && bun test && cd ../../packages/zentao-cli && bun test",
