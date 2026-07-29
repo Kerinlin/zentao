@@ -90,6 +90,16 @@ zentao login -s https://zentao.example.com -u admin -p 123456
 | user | 用户 | CRUD |
 | file | 附件 | 编辑名称 + 删除 |
 
+### 图片上传（富文本图床）
+
+```bash
+zentao upload ./screenshot.png              # 返回相对 URL，可写入 steps
+zentao upload ./a.png ./b.jpg --absolute    # 多文件；输出绝对 URL
+zentao upload ./shot.png --format=json
+```
+
+> 这是编辑器图床上传（`file-ajaxUpload`），不是 `file` 模块的业务对象附件。
+
 > CRUD = 列表 + 详情 + 创建 + 更新 + 删除；CUD = 无独立列表接口，需指定所属范围
 
 ### 列表范围参数
@@ -247,6 +257,7 @@ zentao help              # 查看所有命令
 | 工单 | `zentao ticket ...` |
 | 用户列表 | `zentao user` |
 | 当前用户信息 | `zentao profile` |
+| 上传图片到富文本图床 | `zentao upload <图片路径...>` |
 
 ## 错误处理
 
@@ -258,6 +269,9 @@ zentao help              # 查看所有命令
 | E2002 | 对象不存在 | 检查 ID 是否正确 |
 | E2003 | 缺少必要参数 | 执行 `zentao <module> help` 或 `zentao <module> <action> help` 查看操作参数 |
 | E2006 | 无权限 | 提示用户检查权限 |
+| E2011 | 上传文件不存在 | 检查本地路径 |
+| E2012 | 不支持的图片类型 | 使用 png/jpg/gif/webp/bmp/svg |
+| E2013 | 图片上传失败 | 查看服务端消息；确认已登录 |
 | E5001 | 请求超时 | 检查网络或禅道服务状态 |
 
 ## 注意事项

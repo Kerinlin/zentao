@@ -14,6 +14,7 @@ import { registerModuleCommands } from './register-modules.js';
 import { registerMcpCommand } from './mcp.js';
 import { registerUpgradeCommand } from './upgrade.js';
 import { registerInstallCommand } from './install.js';
+import { registerUploadCommand } from './upload.js';
 
 /** 注册内置子命令与各动态模块子命令 */
 export function registerAllCommands(program: Command): void {
@@ -28,6 +29,7 @@ export function registerAllCommands(program: Command): void {
     registerAddSkillCommand(program);
     registerAddMcpCommand(program);
     registerMcpCommand(program);
+    registerUploadCommand(program);
     registerCrudCommands(program);
     registerModuleCommands(program);
     registerUpgradeCommand(program);

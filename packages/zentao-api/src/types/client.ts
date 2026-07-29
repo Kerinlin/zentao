@@ -42,3 +42,34 @@ export interface ClientRequestOptions {
   /** 单次请求 TLS 跳过证书验证选项；仅 Node.js 运行时支持。 */
   insecure?: boolean;
 }
+
+/**
+ * 上传图片到禅道富文本图床（`file-ajaxUpload`）时的输入。
+ *
+ * 注意：该接口是站点根路径上的 web 端点，不是 `/api.php/v2` REST API。
+ * 需要已配置 API Token；部分实例可将 Token 作为 `zentaosid` 使用。
+ */
+export interface UploadImageInput {
+  /** 原始文件名（用于 Content-Disposition 与 MIME 推断），例如 `screenshot.png`。 */
+  fileName: string;
+  /** 文件二进制内容；浏览器与 Node 均可用。 */
+  data: Blob | ArrayBuffer | Uint8Array | ArrayBufferView;
+  /** 可选 MIME；未传时按 `fileName` 扩展名推断，未知时为 `application/octet-stream`。 */
+  contentType?: string;
+  /** 单次请求超时（毫秒）；优先级高于客户端默认。 */
+  timeout?: number;
+  /** 单次请求是否跳过 TLS 校验；仅 Node.js。 */
+  insecure?: boolean;
+  /** 外部取消信号。 */
+  signal?: AbortSignal;
+}
+
+/** {@link import('../client/index.js').ZentaoClient.uploadImage} 的成功结果。 */
+export interface UploadImageResult {
+  /** 服务端返回的相对路径，例如 `/zentao/file-read-8752.png`。 */
+  url: string;
+  /** 可直接访问的绝对 URL（由站点 origin 与相对路径拼接）。 */
+  absoluteUrl: string;
+  /** 上传时使用的文件名。 */
+  fileName: string;
+}

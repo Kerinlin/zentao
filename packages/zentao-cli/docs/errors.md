@@ -27,6 +27,9 @@
 | 2007 | `--data` 参数中的 JSON 数据格式无效 |
 | 2008 | 禅道服务端返回错误（Url：{url}，Status：{status}），请查看详细错误信息：{serverResponse} |
 | 2009 | 选项 {option} 的值无效，{reason} |
+| 2011 | 文件不存在或不是普通文件: {path} |
+| 2012 | 不支持的文件类型 {ext}，允许: png,jpg,jpeg,gif,webp,bmp,svg |
+| 2013 | 图片上传失败: {message} |
 | **数据处理 (30xx)** | |
 | 3001 | `--pick` 指定的字段不存在 |
 | 3002 | `--filter` 表达式格式无效，请检查过滤条件格式 |

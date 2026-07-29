@@ -9,6 +9,8 @@ import type {
   HttpMethod,
   LoginResponse,
   ServerConfig,
+  UploadImageInput,
+  UploadImageResult,
   ZentaoClientOptions,
   ZentaoProfileConfig,
 } from '../types/index.js';
@@ -104,6 +106,56 @@ function createRequestSignal(timeout: number, externalSignal?: AbortSignal): { s
       externalSignal?.removeEventListener('abort', abortFromExternal);
     },
   };
+}
+
+const UPLOAD_MIME_BY_EXT: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  bmp: 'image/bmp',
+  svg: 'image/svg+xml',
+};
+
+/** Infer MIME type from a file name extension; unknown extensions become octet-stream. */
+function mimeTypeFromFileName(fileName: string): string {
+  const ext = fileName.includes('.') ? fileName.split('.').pop()!.toLowerCase() : '';
+  return UPLOAD_MIME_BY_EXT[ext] ?? 'application/octet-stream';
+}
+
+/** Normalize upload payloads into a Blob suitable for FormData. */
+function toUploadBlob(data: UploadImageInput['data'], contentType: string): Blob {
+  if (typeof Blob !== 'undefined' && data instanceof Blob) {
+    if (data.type) return data;
+    return new Blob([data], { type: contentType });
+  }
+  if (data instanceof ArrayBuffer) {
+    return new Blob([data], { type: contentType });
+  }
+  if (ArrayBuffer.isView(data)) {
+    const view = data as ArrayBufferView;
+    const copy = new Uint8Array(view.byteLength);
+    copy.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
+    return new Blob([copy], { type: contentType });
+  }
+  throw new ZentaoError('E_INVALID_PARAM', { param: 'data', value: typeof data });
+}
+
+/**
+ * Build an absolute URL for an ajaxUpload result.
+ * Server usually returns a root-absolute path like `/zentao/file-read-1.png`;
+ * join against the site origin so subdirectory installs keep a single `/zentao` prefix.
+ */
+function resolveUploadAbsoluteUrl(siteUrl: string, relativeOrAbsolute: string): string {
+  const trimmed = relativeOrAbsolute.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const origin = new URL(siteUrl).origin;
+  if (trimmed.startsWith('/')) {
+    return new URL(trimmed, `${origin}/`).toString();
+  }
+  const base = siteUrl.endsWith('/') ? siteUrl : `${siteUrl}/`;
+  return new URL(trimmed, base).toString();
 }
 
 /** 按指定策略解析响应；默认优先 JSON，失败后保留原始文本。 */
@@ -291,6 +343,115 @@ export class ZentaoClient {
    */
   async delete<T>(path: string, options: Omit<ClientRequestOptions, 'method' | 'body' | 'bodyType'> = {}): Promise<T> {
     return this.request(path, { ...options, method: 'DELETE' }) as Promise<T>;
+  }
+
+  /**
+   * 上传图片到禅道富文本图床（编辑器 `file-ajaxUpload`）。
+   *
+   * 请求走站点根路径 `POST {siteUrl}/file-ajaxUpload.json`，表单字段必须为 `imgFile`
+   *（字段名 `file` 会被部分版本拒绝）。鉴权使用当前客户端的 API Token：
+   * query `zentaosid` + 请求头 `Token`。部分禅道实例允许将 API Token 当作 web session id。
+   *
+   * @param input - 文件名与二进制内容，参见 {@link UploadImageInput}。
+   * @returns 相对路径 `url` 与可访问的 `absoluteUrl`。
+   * @throws {ZentaoError} `E_NO_TOKEN`（未配置 token）、`E_UPLOAD_FAILED`（服务端业务失败或非 JSON 响应）、
+   *   以及与 {@link ZentaoClient.request} 相同的传输层错误。
+   */
+  async uploadImage(input: UploadImageInput): Promise<UploadImageResult> {
+    if (!this.token) {
+      throw new ZentaoError('E_NO_TOKEN');
+    }
+    if (!input?.fileName || typeof input.fileName !== 'string' || !input.fileName.trim()) {
+      throw new ZentaoError('E_MISSING_PARAM', { param: 'fileName' });
+    }
+    if (input.data === undefined || input.data === null) {
+      throw new ZentaoError('E_MISSING_PARAM', { param: 'data' });
+    }
+
+    const fileName = input.fileName.trim();
+    const contentType = input.contentType?.trim() || mimeTypeFromFileName(fileName);
+    const blob = toUploadBlob(input.data, contentType);
+
+    const form = new FormData();
+    form.append('imgFile', blob, fileName);
+
+    const globals = getGlobalOptions();
+    const timeout = input.timeout ?? globals.timeout ?? this.timeout ?? DEFAULT_TIMEOUT;
+    const insecure = input.insecure ?? globals.insecure ?? this.insecure;
+    assertInsecureSupported(insecure);
+
+    const url = new URL(`${this.siteUrl}/file-ajaxUpload.json`);
+    url.searchParams.set('zentaosid', this.token);
+    url.searchParams.set('uid', String(Date.now()));
+
+    const headers = new Headers();
+    headers.set('Token', this.token);
+
+    const { signal, cleanup } = createRequestSignal(timeout, input.signal);
+    try {
+      const response = await fetchWithInsecureTls(insecure, url.toString(), {
+        method: 'POST',
+        headers,
+        body: form,
+        signal,
+      });
+
+      const text = await response.text().catch(() => '');
+      if (!response.ok) {
+        throw new ZentaoError('E_HTTP_ERROR', {
+          status: response.status,
+          statusText: response.statusText,
+        }, {
+          url: response.url || url.toString(),
+          status: response.status,
+          statusText: response.statusText,
+          body: text,
+        });
+      }
+
+      let json: unknown;
+      try {
+        json = text === '' ? undefined : JSON.parse(text);
+      } catch {
+        throw new ZentaoError('E_UPLOAD_FAILED', {
+          message: text.slice(0, 300) || 'response is not JSON',
+        }, { body: text });
+      }
+
+      if (!isRecord(json)) {
+        throw new ZentaoError('E_UPLOAD_FAILED', { message: 'invalid response shape' }, { body: text });
+      }
+
+      const relativeUrl = typeof json.url === 'string' ? json.url : '';
+      const errorCode = json.error;
+      const resultFlag = json.result;
+      const ok =
+        relativeUrl.length > 0
+        && (errorCode === 0 || errorCode === '0' || resultFlag === 'success');
+
+      if (!ok) {
+        const message =
+          (typeof json.message === 'string' && json.message)
+          || (typeof json.error === 'string' && json.error)
+          || text.slice(0, 300)
+          || 'unknown error';
+        throw new ZentaoError('E_UPLOAD_FAILED', { message }, { body: json });
+      }
+
+      return {
+        url: relativeUrl,
+        absoluteUrl: resolveUploadAbsoluteUrl(this.siteUrl, relativeUrl),
+        fileName,
+      };
+    } catch (error) {
+      if (error instanceof ZentaoError) throw error;
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new ZentaoError('E_TIMEOUT');
+      }
+      throw new ZentaoError('E_NETWORK_ERROR', { message: (error as Error).message ?? String(error) }, error);
+    } finally {
+      cleanup();
+    }
   }
 
   /**

@@ -74,6 +74,28 @@ $ ZENTAO_CONFIG_FILE=~/work/zt.json zentao product
 
 路径支持 `~` 展开与相对路径（相对当前工作目录）。当 `--config` 与 `ZENTAO_CONFIG_FILE` 同时存在时，`--config` 优先。
 
+## 上传图片到富文本图床
+
+将本地图片上传到禅道编辑器图床（`file-ajaxUpload`），返回可写入 Bug/用例 steps 等富文本的图片 URL。
+
+```bash
+# 上传单张图片，默认输出相对路径
+$ zentao upload ./shot.png
+/zentao/file-read-8752.png
+
+# 多文件顺序上传；有失败时 exit code 为 1
+$ zentao upload ./a.png ./b.jpg
+
+# 输出绝对 URL
+$ zentao upload ./shot.png --absolute
+https://zentao.example.com/zentao/file-read-8752.png
+
+# JSON 输出
+$ zentao upload ./shot.png --format=json
+```
+
+支持扩展名：`png`、`jpg`、`jpeg`、`gif`、`webp`、`bmp`、`svg`。该命令上传的是富文本图床资源，不是业务对象附件（`file` 模块）。
+
 ## 禅道数据访问和操作
 
 ### 命令调用方式

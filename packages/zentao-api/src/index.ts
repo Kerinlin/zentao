@@ -69,6 +69,8 @@ export type {
   ServerConfig,
   SortExpr,
   SortFn,
+  UploadImageInput,
+  UploadImageResult,
   ZentaoProfile,
   ZentaoProfileConfig,
   ZentaoProfileRecord,

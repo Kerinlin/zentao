@@ -98,6 +98,16 @@ describe('mapSdkError', () => {
         expect((mapSdkError(new SdkZentaoError('E_MISSING_PARAM', { param: 'title' })) as ZentaoError).code).toBe('2003');
     });
 
+    test('maps E_NO_TOKEN to E1001', () => {
+        expect((mapSdkError(new SdkZentaoError('E_NO_TOKEN')) as ZentaoError).code).toBe('1001');
+    });
+
+    test('maps E_UPLOAD_FAILED to E2013', () => {
+        const mapped = mapSdkError(new SdkZentaoError('E_UPLOAD_FAILED', { message: '格式不在范围' })) as ZentaoError;
+        expect(mapped.code).toBe('2013');
+        expect(mapped.message).toContain('格式不在范围');
+    });
+
     test('returns CLI ZentaoError unchanged', () => {
         const cli = new ZentaoError('E1006');
         expect(mapSdkError(cli)).toBe(cli);

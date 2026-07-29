@@ -24,6 +24,9 @@ export const ERROR_CODES = {
     E2008: '禅道服务端返回错误（Url：{url}，Status：{status}），请查看详细错误信息：{serverResponse}',
     E2009: '选项 {option} 的值无效，{reason}',
     E2010: '选项 {option} 的值类型必须为 {type}，实际类型为 {actualType}',
+    E2011: '文件不存在或不是普通文件: {path}',
+    E2012: '不支持的文件类型 {ext}，允许: png,jpg,jpeg,gif,webp,bmp,svg',
+    E2013: '图片上传失败: {message}',
 
     // 数据处理 (30xx)
     E3001: '`--pick` 指定的字段不存在',
@@ -155,6 +158,12 @@ export function mapSdkError(error: unknown): unknown {
             return new ZentaoError('E1006', undefined, details);
         case 'E_PROFILE_NOT_FOUND':
             return new ZentaoError('E1007', undefined, details);
+        case 'E_NO_TOKEN':
+            return new ZentaoError('E1001', undefined, details);
+        case 'E_UPLOAD_FAILED':
+            return new ZentaoError('E2013', {
+                message: tail(message, 'failed:') || (message ?? ''),
+            }, details);
         default:
             return new ZentaoError('E2008', { url: '', status: '', serverResponse: message ?? String(code) }, details);
     }

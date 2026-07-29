@@ -27,6 +27,8 @@ export const ERRORS = {
   E_INVALID_PARAM: 'Invalid value for parameter {param}: {value}',
   E_INVALID_REQUEST_NAME: 'Request name must use the form "moduleName", "moduleName/methodName", or "moduleName/<objectID>".',
   E_API_FAILED: 'ZenTao API returned failure: {message}',
+  E_NO_TOKEN: 'ZenTao API token is required for this operation.',
+  E_UPLOAD_FAILED: 'Image upload failed: {message}',
 } as const;
 
 /** SDK 已知错误码，对应 {@link ERRORS} 的 key。 */
