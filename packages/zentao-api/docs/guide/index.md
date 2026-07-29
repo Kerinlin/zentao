@@ -1,6 +1,6 @@
 # 快速开始
 
-`zentao-api` 是一个面向禅道 API v2 的 JavaScript/TypeScript SDK，可在 Node.js 18+、Bun、浏览器打包工具和 CDN/script 标签场景中使用。
+`@kerin/zentao-api` 是一个面向禅道 API v2 的 JavaScript/TypeScript SDK，可在 Node.js 18+、Bun、浏览器打包工具和 CDN/script 标签场景中使用。
 
 SDK 提供两层调用方式：
 
@@ -12,15 +12,15 @@ SDK 提供两层调用方式：
 ::: code-group
 
 ```sh [npm]
-npm install zentao-api
+npm install @kerin/zentao-api
 ```
 
 ```sh [bun]
-bun add zentao-api
+bun add @kerin/zentao-api
 ```
 
 ```sh [pnpm]
-pnpm add zentao-api
+pnpm add @kerin/zentao-api
 ```
 
 :::
@@ -28,7 +28,7 @@ pnpm add zentao-api
 ## 创建客户端
 
 ```ts
-import { ZentaoClient } from 'zentao-api';
+import { ZentaoClient } from '@kerin/zentao-api';
 
 const client = new ZentaoClient({
   baseUrl: 'https://zentao.example.com',
@@ -43,7 +43,7 @@ const products = await client.get('/products');
 ## 使用账号密码登录
 
 ```ts
-import { ZentaoClient } from 'zentao-api';
+import { ZentaoClient } from '@kerin/zentao-api';
 
 const client = new ZentaoClient('https://zentao.example.com');
 const token = await client.login('admin', 'password');
@@ -54,7 +54,7 @@ const token = await client.login('admin', 'password');
 ## 使用模块请求
 
 ```ts
-import { ZentaoClient, request, setGlobalOptions } from 'zentao-api';
+import { ZentaoClient, request, setGlobalOptions } from '@kerin/zentao-api';
 
 ZentaoClient.init({
   baseUrl: 'https://zentao.example.com',

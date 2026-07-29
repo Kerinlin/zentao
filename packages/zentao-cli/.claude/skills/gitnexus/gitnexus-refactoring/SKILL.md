@@ -5,6 +5,9 @@ description: "Use when the user wants to rename, extract, split, move, or restru
 
 # Refactoring with GitNexus
 
+> **Monorepo:** index project name is always **`zentao`** at the repo root (not `zentao-api` / `zentao-cli`). Stale → `npx gitnexus analyze` at monorepo root.
+
+
 ## When to Use
 
 - "Rename this function safely"

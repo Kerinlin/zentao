@@ -5,7 +5,7 @@
 启用 `persistProfiles` 后，`login()` 成功时会保存站点、账号、token 和客户端配置。
 
 ```ts
-import { ZentaoClient, setGlobalOptions } from 'zentao-api';
+import { ZentaoClient, setGlobalOptions } from '@kerin/zentao-api';
 
 setGlobalOptions({ persistProfiles: true });
 
@@ -34,7 +34,7 @@ import {
   getAllProfiles,
   getProfile,
   switchProfile,
-} from 'zentao-api';
+} from '@kerin/zentao-api';
 
 const profiles = await getAllProfiles();
 const active = await switchProfile(profiles[0].key);
@@ -54,7 +54,7 @@ await deleteProfile('admin@https://zentao.example.com');
 SDK 会把 HTTP、网络、超时、环境限制和模块解析错误包装为 `ZentaoError`。
 
 ```ts
-import { ZentaoError } from 'zentao-api';
+import { ZentaoError } from '@kerin/zentao-api';
 
 try {
   await client.get('/products');
@@ -74,7 +74,7 @@ try {
 如果业务希望在禅道返回 `{ status: "fail" }` 时直接走异常分支，可以打开 `throwOnFail`。
 
 ```ts
-import { request, setGlobalOptions } from 'zentao-api';
+import { request, setGlobalOptions } from '@kerin/zentao-api';
 
 // 单次调用启用
 await request('product/list', {}, { throwOnFail: true });

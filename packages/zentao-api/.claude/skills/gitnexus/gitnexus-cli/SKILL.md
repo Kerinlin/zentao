@@ -5,6 +5,9 @@ description: "Use when the user needs to run GitNexus CLI commands like analyze/
 
 # GitNexus CLI Commands
 
+> **Monorepo:** index project name is always **`zentao`** at the repo root (not `zentao-api` / `zentao-cli`). Stale → `npx gitnexus analyze` at monorepo root.
+
+
 All commands work via `npx` — no global install required.
 
 ## Commands
@@ -23,7 +26,7 @@ Run from the project root. This parses all source files, builds the knowledge gr
 | `--embeddings` | Enable embedding generation for semantic search (off by default) |
 | `--drop-embeddings` | Drop existing embeddings on rebuild. By default, an `analyze` without `--embeddings` preserves them. |
 
-**When to run:** First time in a project, after major code changes, or when `gitnexus://repo/{name}/context` reports the index is stale. In Claude Code, a PostToolUse hook detects staleness after `git commit` and `git merge` and notifies the agent to run `analyze` — the hook does not run analyze itself, to avoid blocking the agent for up to 120s and risking KuzuDB corruption on timeout.
+**When to run:** First time in a project, after major code changes, or when `gitnexus://repo/zentao/context` reports the index is stale. In Claude Code, a PostToolUse hook detects staleness after `git commit` and `git merge` and notifies the agent to run `analyze` — the hook does not run analyze itself, to avoid blocking the agent for up to 120s and risking KuzuDB corruption on timeout.
 
 ### status — Check index freshness
 
@@ -73,7 +76,7 @@ Lists all repositories registered in `~/.gitnexus/registry.json`. The MCP `list_
 
 ## After Indexing
 
-1. **Read `gitnexus://repo/{name}/context`** to verify the index loaded
+1. **Read `gitnexus://repo/zentao/context`** to verify the index loaded
 2. Use the other GitNexus skills (`exploring`, `debugging`, `impact-analysis`, `refactoring`) for your task
 
 ## Troubleshooting

@@ -3,9 +3,9 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **zentao** (3757 symbols, 5528 relationships, 155 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This monorepo is indexed by GitNexus as **zentao** (3757 symbols, 5528 relationships, 155 execution flows). One index covers `@kerin/zentao-api` and `@kerin/zentao-cli`. Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
-> If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
+> If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` at the **repo root** first. Do not use obsolete single-package names `zentao-api` / `zentao-cli`.
 
 ## Always Do
 

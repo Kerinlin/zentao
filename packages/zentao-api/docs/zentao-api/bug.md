@@ -50,7 +50,7 @@ Bug管理，支持获取Bug列表，支持获取产品/项目/执行下的Bug、
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("bug/list", {
   "scope": "<string>",
@@ -133,6 +133,10 @@ Schema:
       "type": "integer",
       "description": "相关需求",
       "format": "int32"
+    },
+    "assignedTo": {
+      "type": "string",
+      "description": "指派给（用户账号）"
     }
   },
   "required": [
@@ -158,7 +162,8 @@ Schema:
   "pri": 1,
   "type": "<string>",
   "steps": "<string>",
-  "story": 1
+  "story": 1,
+  "assignedTo": "<string>"
 }
 ```
 
@@ -169,7 +174,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("bug/create", {
   "productID": 1,
@@ -183,7 +188,8 @@ const result = await request("bug/create", {
   "pri": 1,
   "type": "<string>",
   "steps": "<string>",
-  "story": 1
+  "story": 1,
+  "assignedTo": "<string>"
 });
 ```
 ## 获取Bug详情
@@ -214,7 +220,7 @@ const result = await request("bug/create", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("bug/get", {
   "bugID": 1
@@ -289,6 +295,10 @@ Schema:
       "type": "integer",
       "description": "相关需求",
       "format": "int32"
+    },
+    "assignedTo": {
+      "type": "string",
+      "description": "指派给（用户账号）"
     }
   }
 }
@@ -308,7 +318,8 @@ Schema:
   "steps": "<string>",
   "project": 1,
   "execution": 1,
-  "story": 1
+  "story": 1,
+  "assignedTo": "<string>"
 }
 ```
 
@@ -319,7 +330,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("bug/update", {
   "bugID": 1,
@@ -333,7 +344,8 @@ const result = await request("bug/update", {
   "steps": "<string>",
   "project": 1,
   "execution": 1,
-  "story": 1
+  "story": 1,
+  "assignedTo": "<string>"
 });
 ```
 ## 删除Bug
@@ -363,7 +375,7 @@ const result = await request("bug/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("bug/delete", {
   "bugID": 1
@@ -433,7 +445,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("bug/activate", {
   "bugID": 1,
@@ -493,7 +505,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("bug/close", {
   "bugID": 1,
@@ -572,7 +584,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("bug/resolve", {
   "bugID": 1,

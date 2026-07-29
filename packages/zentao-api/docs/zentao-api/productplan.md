@@ -46,7 +46,7 @@
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("productplan/list", {
   "productID": 1,
@@ -140,7 +140,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("productplan/create", {
   "productID": 1,
@@ -180,7 +180,7 @@ const result = await request("productplan/create", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("productplan/get", {
   "planID": 1
@@ -265,7 +265,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("productplan/update", {
   "productplanID": 1,
@@ -304,7 +304,7 @@ const result = await request("productplan/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("productplan/delete", {
   "productplanID": 1

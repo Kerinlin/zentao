@@ -50,7 +50,7 @@
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("story/list", {
   "scope": "<string>",
@@ -189,7 +189,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("story/create", {
   "productID": 1,
@@ -238,7 +238,7 @@ const result = await request("story/create", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("story/get", {
   "storyID": 1
@@ -340,7 +340,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("story/update", {
   "storyID": 1,
@@ -382,7 +382,7 @@ const result = await request("story/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("story/delete", {
   "storyID": 1
@@ -442,7 +442,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("story/activate", {
   "storyID": 1,
@@ -522,7 +522,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("story/change", {
   "storyID": 1,
@@ -591,7 +591,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("story/close", {
   "storyID": 1,

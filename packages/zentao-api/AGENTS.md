@@ -47,7 +47,7 @@ Single file: `bun test tests/client.test.ts`
 
 ## Browser Build
 
-`scripts/build-browser.ts` → UMD bundle exposing `window.ZentaoAPI`. Entry: `src/browser.ts` → `src/misc/browser-global.ts`.
+`scripts/build-browser.ts` builds the IIFE bundle from `src/browser-global.ts` → `dist/browser/zentao-api.global.js`, exposing `window.ZentaoAPI`. The `./browser` ESM subpath (`src/browser.ts`) re-exports the main entry and does **not** inject globals.
 
 ## Documentation Site
 
@@ -72,10 +72,35 @@ English, prefix format: `*|+|- <type>: <message>` (`*` change, `+` add, `-` remo
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-本包属于 **zentao** monorepo，GitNexus 索引在整个仓根（项目名 `zentao`，含 api + cli 跨包调用关系）。**查询、impact、rename 统一用项目名 `zentao`**，不要用 `zentao-cli`/`zentao-api` 单包旧名（已废弃）。
+本包属于 **zentao** monorepo。GitNexus 索引建在**仓根**，项目名 **`zentao`**（约 3757 symbols / 5528 relationships / 155 flows），含 api ↔ cli 跨包调用。查询、impact、rename **统一用 `zentao`**；**禁止**用已废弃单包名 `zentao-api` / `zentao-cli`。
 
-- 索引 stale：仓根跑 `npx gitnexus analyze`
-- Resource URI：`gitnexus://repo/zentao/...`
-- 完整 Always/Never 规则与 skill 表：见仓根 `AGENTS.md`
+> Index stale：在**仓根**执行 `npx gitnexus analyze`（不要在 `packages/*` 下单独 analyze）。
+
+## Always Do
+
+- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `gitnexus_impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level). 改 api 符号时要追到 cli 受影响调用点。
+- **MUST run `gitnexus_detect_changes()` before committing** to verify changes only affect expected symbols and execution flows.
+- **MUST warn** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
+- Prefer `gitnexus_query({query: "concept"})` / `gitnexus_context({name: "symbolName"})` over blind grepping for architecture and call-graph questions.
+
+## Never Do
+
+- NEVER edit a function, class, or method without first running `gitnexus_impact` on it.
+- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
+- NEVER rename symbols with find-and-replace — use `gitnexus_rename`.
+- NEVER commit without `gitnexus_detect_changes()`.
+
+## Resources
+
+| Resource | Use for |
+|----------|---------|
+| `gitnexus://repo/zentao/context` | Codebase overview, index freshness |
+| `gitnexus://repo/zentao/clusters` | Functional areas |
+| `gitnexus://repo/zentao/processes` | Execution flows（跨 api/cli） |
+| `gitnexus://repo/zentao/process/{name}` | Step-by-step trace |
+
+## Skills
+
+相对本包或仓根均可：`.claude/skills/gitnexus/<skill>/SKILL.md`（exploring / impact-analysis / debugging / refactoring / guide / cli）。完整约定见仓根 `AGENTS.md`。
 <!-- gitnexus:end -->
 

@@ -5,13 +5,16 @@ description: "Use when the user asks about GitNexus itself — available tools, 
 
 # GitNexus Guide
 
+> **Monorepo:** this package is part of **zentao**. GitNexus index lives at the **repo root**; project name is always **`zentao`** (not `zentao-api` / `zentao-cli`). Stale index → run `npx gitnexus analyze` at the monorepo root.
+
+
 Quick reference for all GitNexus MCP tools, resources, and the knowledge graph schema.
 
 ## Always Start Here
 
 For any task involving code understanding, debugging, impact analysis, or refactoring:
 
-1. **Read `gitnexus://repo/{name}/context`** — codebase overview + check index freshness
+1. **Read `gitnexus://repo/zentao/context`** — codebase overview + check index freshness
 2. **Match your task to a skill below** and **read that skill file**
 3. **Follow the skill's workflow and checklist**
 
@@ -37,7 +40,7 @@ For any task involving code understanding, debugging, impact analysis, or refact
 | `impact`         | Symbol blast radius — what breaks at depth 1/2/3 with confidence         |
 | `detect_changes` | Git-diff impact — what do your current changes affect                    |
 | `rename`         | Multi-file coordinated rename with confidence-tagged edits               |
-| `cypher`         | Raw graph queries (read `gitnexus://repo/{name}/schema` first)           |
+| `cypher`         | Raw graph queries (read `gitnexus://repo/zentao/schema` first)           |
 | `list_repos`     | Discover indexed repos                                                   |
 
 ## Resources Reference
@@ -46,12 +49,12 @@ Lightweight reads (~100-500 tokens) for navigation:
 
 | Resource                                       | Content                                   |
 | ---------------------------------------------- | ----------------------------------------- |
-| `gitnexus://repo/{name}/context`               | Stats, staleness check                    |
-| `gitnexus://repo/{name}/clusters`              | All functional areas with cohesion scores |
-| `gitnexus://repo/{name}/cluster/{clusterName}` | Area members                              |
-| `gitnexus://repo/{name}/processes`             | All execution flows                       |
-| `gitnexus://repo/{name}/process/{processName}` | Step-by-step trace                        |
-| `gitnexus://repo/{name}/schema`                | Graph schema for Cypher                   |
+| `gitnexus://repo/zentao/context`               | Stats, staleness check                    |
+| `gitnexus://repo/zentao/clusters`              | All functional areas with cohesion scores |
+| `gitnexus://repo/zentao/cluster/{clusterName}` | Area members                              |
+| `gitnexus://repo/zentao/processes`             | All execution flows                       |
+| `gitnexus://repo/zentao/process/{processName}` | Step-by-step trace                        |
+| `gitnexus://repo/zentao/schema`                | Graph schema for Cypher                   |
 
 ## Graph Schema
 

@@ -49,7 +49,7 @@
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("epic/list", {
   "productID": 1,
@@ -175,7 +175,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("epic/create", {
   "productID": 1,
@@ -222,7 +222,7 @@ const result = await request("epic/create", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("epic/get", {
   "storyID": 1
@@ -320,7 +320,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("epic/update", {
   "epicID": 1,
@@ -361,7 +361,7 @@ const result = await request("epic/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("epic/delete", {
   "epicID": 1
@@ -421,7 +421,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("epic/activate", {
   "epicID": 1,
@@ -501,7 +501,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("epic/change", {
   "epicID": 1,
@@ -570,7 +570,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("epic/close", {
   "epicID": 1,

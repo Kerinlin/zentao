@@ -44,7 +44,7 @@
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("program/list", {
   "status": "all",
@@ -125,7 +125,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("program/create", {
   "name": "<string>",
@@ -163,7 +163,7 @@ const result = await request("program/create", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("program/get", {
   "programID": 1
@@ -243,7 +243,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("program/update", {
   "programID": 1,
@@ -281,7 +281,7 @@ const result = await request("program/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("program/delete", {
   "programID": 1

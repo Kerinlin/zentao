@@ -5,7 +5,7 @@
 ## 获取产品列表
 
 ```ts
-import { ZentaoClient, request } from 'zentao-api';
+import { ZentaoClient, request } from '@kerin/zentao-api';
 
 ZentaoClient.init({
   baseUrl: 'https://zentao.example.com',
@@ -77,7 +77,7 @@ const task = await request('task/create', {
 当你需要调用尚未注册到模块系统的接口时，可以使用底层 `ZentaoClient.request()`。
 
 ```ts
-import { ZentaoClient } from 'zentao-api';
+import { ZentaoClient } from '@kerin/zentao-api';
 
 const client = new ZentaoClient({
   baseUrl: 'https://zentao.example.com',
@@ -132,7 +132,7 @@ console.log(bugs.data);
 `request()` 默认按原样返回 `{ status: "fail" }` 响应；启用 `throwOnFail` 后会抛出 `E_API_FAILED`。
 
 ```ts
-import { request, ZentaoError } from 'zentao-api';
+import { request, ZentaoError } from '@kerin/zentao-api';
 
 try {
   await request('bug/resolve', { bugID: 1001, resolution: 'fixed' }, { throwOnFail: true });

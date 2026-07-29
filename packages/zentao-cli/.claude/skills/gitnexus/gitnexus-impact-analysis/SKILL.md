@@ -5,6 +5,9 @@ description: "Use when the user wants to know what will break if they change som
 
 # Impact Analysis with GitNexus
 
+> **Monorepo:** index project name is always **`zentao`** at the repo root (not `zentao-api` / `zentao-cli`). Stale → `npx gitnexus analyze` at monorepo root.
+
+
 ## When to Use
 
 - "Is it safe to change this function?"
@@ -18,7 +21,7 @@ description: "Use when the user wants to know what will break if they change som
 
 ```
 1. gitnexus_impact({target: "X", direction: "upstream"})  → What depends on this
-2. READ gitnexus://repo/{name}/processes                   → Check affected execution flows
+2. READ gitnexus://repo/zentao/processes                   → Check affected execution flows
 3. gitnexus_detect_changes()                               → Map current git changes to affected flows
 4. Assess risk and report to user
 ```
@@ -90,7 +93,7 @@ gitnexus_detect_changes({scope: "staged"})
    → d=1: loginHandler, apiMiddleware (WILL BREAK)
    → d=2: authRouter, sessionManager (LIKELY AFFECTED)
 
-2. READ gitnexus://repo/my-app/processes
+2. READ gitnexus://repo/zentao/processes
    → LoginFlow and TokenRefresh touch validateUser
 
 3. Risk: 2 direct callers, 2 processes = MEDIUM

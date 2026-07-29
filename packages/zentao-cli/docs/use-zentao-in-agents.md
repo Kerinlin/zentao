@@ -1,6 +1,6 @@
 # 在 Agents 中使用禅道
 
-你是否希望在 AI Agents 中使用禅道？没问题，可以通过安装禅道 CLI 技能来实现。CLI 技能会利用 [zentao-cli](https://github.com/easysoft/zentao-cli) 工具来访问和操作禅道数据。
+你是否希望在 AI Agents 中使用禅道？没问题，可以通过安装禅道 CLI 技能来实现。CLI 技能会利用 [`@kerin/zentao-cli`](https://github.com/Kerinlin/zentao/tree/main/packages/zentao-cli) 工具来访问和操作禅道数据。
 
 关于 zentao-cli 的主要特性，请参考 [README](../README.md#主要特性)。
 
@@ -26,7 +26,7 @@
 现代的 Agents 工具都支持自动发现安装技能，可以将如下内容发送给 Agent 来进行安装：
 
 ```sh
-参考 https://github.com/easysoft/zentao-cli 来安装 zentao-cli，并安装仓库内的所有技能。
+参考 [monorepo 安装说明](../README.md#快速使用) 安装 `@kerin/zentao-cli`，并安装包内 `skills/` 下的技能。
 ```
 
 如果你是开发者，可以直接在终端中执行命令来安装：

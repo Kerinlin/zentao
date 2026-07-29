@@ -4,9 +4,9 @@ description: 通过 zentao 命令行工具查询和操作禅道（ZenTao）数�
 license: MIT
 metadata:
   author: Sun Hao <sunhao@chandao.com>
-  repository: https://github.com/easysoft/zentao-cli.git
+  repository: https://github.com/Kerinlin/zentao.git
   keywords: [zentao, 禅道, cli, project-management]
-  version: 0.1.9
+  version: 1.1.0
 ---
 
 # 禅道 CLI

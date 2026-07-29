@@ -169,7 +169,7 @@ function renderSdkExample(module: ModuleDefinition, action: ModuleAction): strin
 
   return [
     '```ts',
-    "import { request } from 'zentao-api';",
+    "import { request } from '@kerin/zentao-api';",
     '',
     call,
     '```',

@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: zentao-api
+  name: "@kerin/zentao-api"
   text: ZenTao API v2 SDK
   tagline: 面向 Node.js、Bun、浏览器打包工具和 CDN 场景的轻量 TypeScript SDK。
   actions:

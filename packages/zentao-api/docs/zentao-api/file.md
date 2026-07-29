@@ -59,7 +59,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("file/create", {
   "fileName": "<string>"
@@ -92,7 +92,7 @@ const result = await request("file/create", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("file/delete", {
   "fileID": 1

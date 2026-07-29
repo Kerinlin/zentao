@@ -5,6 +5,9 @@ description: "Use when the user is debugging a bug, tracing an error, or asking 
 
 # Debugging with GitNexus
 
+> **Monorepo:** index project name is always **`zentao`** at the repo root (not `zentao-api` / `zentao-cli`). Stale → `npx gitnexus analyze` at monorepo root.
+
+
 ## When to Use
 
 - "Why is this function failing?"
@@ -18,7 +21,7 @@ description: "Use when the user is debugging a bug, tracing an error, or asking 
 ```
 1. gitnexus_query({query: "<error or symptom>"})            → Find related execution flows
 2. gitnexus_context({name: "<suspect>"})                    → See callers/callees/processes
-3. READ gitnexus://repo/{name}/process/{name}                → Trace execution flow
+3. READ gitnexus://repo/zentao/process/{name}                → Trace execution flow
 4. gitnexus_cypher({query: "MATCH path..."})                 → Custom traces if needed
 ```
 
@@ -82,7 +85,7 @@ RETURN [n IN nodes(path) | n.name] AS chain
 2. gitnexus_context({name: "validatePayment"})
    → Outgoing calls: verifyCard, fetchRates (external API!)
 
-3. READ gitnexus://repo/my-app/process/CheckoutFlow
+3. READ gitnexus://repo/zentao/process/CheckoutFlow
    → Step 3: validatePayment → calls fetchRates (external)
 
 4. Root cause: fetchRates calls external API without proper timeout

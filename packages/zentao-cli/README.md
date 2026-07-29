@@ -1,23 +1,25 @@
-# Zentao CLI
+# @kerin/zentao-cli
 
-禅道命令行工具，支持在你喜爱的终端里访问和操作禅道数据，对 AI Agents 友好。
+禅道命令行工具，支持在你喜爱的终端里访问和操作禅道数据，对 AI Agents 友好。本包位于 [zentao monorepo](https://github.com/Kerinlin/zentao) 的 `packages/zentao-cli`，底层依赖同仓的 [`@kerin/zentao-api`](../zentao-api)。
 
 ## 主要特性
 
-* ✅ 基于最新的禅道 RESTful API 2.0 实现
+* ✅ 基于禅道 RESTful API 2.0（经 `@kerin/zentao-api` SDK）
 * ✅ 使用便捷，可通过 `npx @kerin/zentao-cli` 立即运行
-* ✅ 安全的用户认证管理，支持多用户切换
+* ✅ 安全的用户认证管理，支持多 profile / 多用户切换
 * ✅ 支持对数据进行摘取、过滤、排序等处理，并自动将 HTML 转换为 Markdown
 * ✅ 对 AI Agents 友好，帮助信息完善，支持输出 Markdown
-* ✅ 支持以 AI 技能的方式使用，支持通过 `zentao add-skill` 一键安装技能到 AI Agent
-* ✅ 支持 MCP 服务，使用 `npx @kerin/zentao-cli mcp` 启动 MCP 服务
-* ✅ 使用现代的 bun 与 TypeScript 开发，具备类型安全
-* ✅ 提供完善的测试覆盖，保障代码质量
-* ✅ 支持 `zentao upgrade` 检查新版本并自动升级 CLI
+* ✅ 支持以 AI 技能的方式使用，`zentao add-skill` 一键安装到 AI Agent
+* ✅ 支持 MCP 服务，`npx @kerin/zentao-cli mcp` 启动；`zentao add-mcp` 一键写入 Agent 配置
+* ✅ 基础工作区管理：`zentao workspace` / `ls` / `set <id>` 查看与切换（按 product/project/execution 自动建工作区仍待完善）
+* ✅ Shell 自动补全脚本：`zentao autocomplete bash|zsh|fish`
+* ✅ 富文本图床上传：`zentao upload <image>`
+* ✅ `zentao upgrade` 检查新版本并自动升级 CLI
+* ✅ 使用 Bun + TypeScript 开发，具备类型安全与测试覆盖
 
-待实现特性：
+待实现 / 待完善特性：
 
-* [ ] 支持工作区管理，支持记住用户上次访问的产品、项目和执行信息
+* [ ] 工作区：按 product / project / execution 自动拉取并创建、autoSetWorkspace 完整链路
 * [ ] 支持批量创建和更新操作
 * [ ] 对象预设 pick 列表
 * [ ] Markdown 输出渲染，提供适合人阅读的终端渲染模式，为 Markdown 内容应用多彩格式，代码块支持高亮
@@ -166,7 +168,7 @@ zentao bug help
 
 ### 通过 Zentao CLI 技能使用
 
-支持通过 `zentao-cli` 技能访问和操作禅道数据。安装技能可以通过 `zentao add-skill` 一键安装技能到 AI Agent，目前支持 Claude Code、Cursor、Cherry Studio、Codex、OpenCode、VS Code、WorkBuddy 等 AI Agent。
+支持通过 `zentao-cli` 技能访问和操作禅道数据。安装技能可以通过 `zentao add-skill` 一键安装到 AI Agent，目前支持 Claude Code、Cursor、Cherry Studio、Codex、OpenCode、VS Code、Antigravity、Gemini、WorkBuddy。
 
 详细使用可以参考：[在 Agents 中使用禅道](docs/use-zentao-in-agents.md)，下面简单介绍。
 
@@ -183,8 +185,9 @@ $ zentao add-skill
   6) VS Code
   7) Antigravity
   8) Gemini
-  9) 全部安装
-请输入编号 (1-9):9
+  9) WorkBuddy
+  10) 全部安装
+请输入编号 (1-10): 10
 
 # 安装技能到 Claude Code
 $ zentao add-skill claude-code

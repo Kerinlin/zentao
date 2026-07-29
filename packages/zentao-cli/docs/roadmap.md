@@ -2,8 +2,7 @@
 
 ## 提供自动安装脚本
 
-根据用户环境自动安装 zentao-cli 工具，支持 macOS、Linux 和 Windows 系统。
-如果用户已经安装则自动检查更新并升级。
+> ✅ 已实现：`packages/zentao-cli/scripts/install.sh` / `install.ps1`（及 Gitea 变体），README 提供 curl/irm 一键安装。
 
 ## 自动升级
 
@@ -43,7 +42,7 @@ function writeConfig(path: string, data: object) {
 
 ## Shell 自动补全 (Autocompletion)
 
-支持 zsh、bash 或 fish 的自动补全能极大地提升高级用户的体验。建议在核心功能中加入 `zentao autocomplete` 或类似机制。
+> ✅ 已实现：`zentao autocomplete bash|zsh|fish` 输出补全脚本（见 `src/commands/autocomplete.ts`）。
 
 ## 本地缓存机制
 
@@ -51,7 +50,9 @@ function writeConfig(path: string, data: object) {
 
 ## 工作区管理
 
-`zentao-cli` 支持记住用户上次访问的产品、项目和执行信息，这样在调用相关 API 时可以自动使用上次的上下文参数，方便快速访问和操作禅道数据。可以通过如下命令管理工作区：
+> ⚠️ 部分实现：`zentao workspace` / `ls` / `set <id>` 已可用；按 `--product` / `--project` / `--execution` 自动拉取并创建工作区、以及 `autoSetWorkspace` 完整联动仍为 TODO。
+
+目标能力：`zentao-cli` 记住用户上次访问的产品、项目和执行信息，调用相关 API 时自动使用上下文。设计中的命令包括：
 
 * `zentao workspace`：查看当前工作区信息
 * `zentao workspace ls`：查看所有工作区信息

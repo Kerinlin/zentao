@@ -1,13 +1,13 @@
 # 运行环境
 
-`zentao-api` 支持服务端运行时、浏览器打包工具和 script 标签引入。不同环境的主要差异在于跨域、安全和本地 profile 存储。
+`@kerin/zentao-api` 支持服务端运行时、浏览器打包工具和 script 标签引入。不同环境的主要差异在于跨域、安全和本地 profile 存储。
 
 ## Node.js 18+
 
 Node.js 18+ 已内置 `fetch`，可以直接使用 SDK。
 
 ```ts
-import { ZentaoClient } from 'zentao-api';
+import { ZentaoClient } from '@kerin/zentao-api';
 
 const client = new ZentaoClient({
   baseUrl: 'https://zentao.example.com',
@@ -32,7 +32,7 @@ const client = new ZentaoClient({
 Bun 项目可以使用同样的 ESM 导入方式。
 
 ```ts
-import { ZentaoClient, request } from 'zentao-api';
+import { ZentaoClient, request } from '@kerin/zentao-api';
 
 ZentaoClient.init({
   baseUrl: Bun.env.ZENTAO_URL!,
@@ -47,7 +47,7 @@ const products = await request('product/list');
 在 Vite、Webpack、Rspack 等浏览器打包工具中，从包根导入即可，打包工具会自动选用浏览器入口。
 
 ```ts
-import { ZentaoClient } from 'zentao-api';
+import { ZentaoClient } from '@kerin/zentao-api';
 
 const client = new ZentaoClient({
   baseUrl: 'https://zentao.example.com',
@@ -68,7 +68,7 @@ import { ZentaoClient } from 'zentao-api/browser';
 UMD 构建包会把 API 暴露到 `window.ZentaoAPI`，对应包导出子路径 `./browser/global`。
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/zentao-api@latest/dist/browser/zentao-api.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@kerin/zentao-api@latest/dist/browser/zentao-api.global.js"></script>
 <script>
   const client = new window.ZentaoAPI.ZentaoClient('https://zentao.example.com');
   console.log(window.ZentaoAPI.VERSION);

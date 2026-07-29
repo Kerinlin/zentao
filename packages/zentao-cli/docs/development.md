@@ -13,20 +13,27 @@
 
 ## 项目结构
 
+本包位于 monorepo `packages/zentao-cli`，HTTP/模块层依赖同仓 `@kerin/zentao-api`。
+
 ```sh
-zentao-cli/
+packages/zentao-cli/
 ├── src/
-│   ├── commands/           # 命令实现
-│   ├── api/                # API 客户端（HTTP 请求封装、Token 管理）
-│   ├── auth/               # 认证逻辑
-│   ├── utils/              # 工具函数
-│   ├── config/             # 配置管理
-│   ├── types/              # TypeScript 类型定义
-│   └── index.ts            # 入口文件
-├── tests/                  # 测试
-├── bin/                    # CLI 入口
-├── docs/                   # 文档
-├── scripts/                # 脚本
+│   ├── commands/           # 子命令（login、module、workspace、mcp、add-skill…）
+│   ├── api/                # 对 @kerin/zentao-api 的 re-export 与 createClient
+│   ├── modules/            # helper / args / executor（SDK 封装）
+│   ├── auth/               # 认证与交互登录
+│   ├── config/             # configstore + workspace
+│   ├── mcp/                # MCP server
+│   ├── utils/              # 格式化、渲染、HTML→MD、升级检测等
+│   ├── types/              # CLI 类型 + 重导 SDK 类型
+│   ├── errors.ts           # CLI ZentaoError
+│   └── index.ts            # 入口
+├── skills/                 # 随包分发的 Agent skills（zentao-cli / zentao-tour）
+├── tests/
+├── bin/                    # npm 全局入口 shim
+├── docs/
+├── scripts/                # build / install
+├── release/                # standalone 二进制产物（本地构建）
 └── package.json
 ```
 
@@ -39,7 +46,7 @@ zentao-cli/
 bun test
 
 # 运行指定测试文件
-bun test tests/zentao.test.ts
+bun test tests/executor.test.ts
 ```
 
 ## 构建

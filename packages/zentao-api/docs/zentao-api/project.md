@@ -43,7 +43,7 @@
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("project/list", {
   "browseType": "undone",
@@ -148,7 +148,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("project/create", {
   "name": "<string>",
@@ -261,7 +261,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("project/update", {
   "projectID": 1,
@@ -304,7 +304,7 @@ const result = await request("project/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("project/delete", {
   "projectID": 1

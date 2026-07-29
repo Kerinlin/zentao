@@ -3,19 +3,19 @@
 ## 安装包
 
 ```sh
-npm install zentao-api
+npm install @kerin/zentao-api
 ```
 
 如果项目使用 Bun：
 
 ```sh
-bun add zentao-api
+bun add @kerin/zentao-api
 ```
 
 ## 客户端配置
 
 ```ts
-import { ZentaoClient } from 'zentao-api';
+import { ZentaoClient } from '@kerin/zentao-api';
 
 const client = new ZentaoClient({
   baseUrl: 'https://zentao.example.com',
@@ -37,7 +37,7 @@ const client = new ZentaoClient({
 `ZentaoClient.init()` 会创建客户端并写入全局选项，供高阶 `request()` 使用。
 
 ```ts
-import { ZentaoClient, request, setGlobalOptions } from 'zentao-api';
+import { ZentaoClient, request, setGlobalOptions } from '@kerin/zentao-api';
 
 ZentaoClient.init({
   baseUrl: 'https://zentao.example.com',
@@ -85,7 +85,7 @@ import type {
   RequestOptions,
   ResponseData,
   ZentaoClientOptions,
-} from 'zentao-api';
+} from '@kerin/zentao-api';
 ```
 
 完整类型列表见 [Reference](/reference/)。

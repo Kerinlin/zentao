@@ -48,7 +48,7 @@
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("ticket/list", {
   "productID": 1,
@@ -151,7 +151,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("ticket/create", {
   "product": 1,
@@ -194,7 +194,7 @@ const result = await request("ticket/create", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("ticket/get", {
   "ticketID": 1
@@ -291,7 +291,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("ticket/update", {
   "ticketID": 1,
@@ -334,7 +334,7 @@ const result = await request("ticket/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("ticket/delete", {
   "ticketID": 1
@@ -394,7 +394,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("ticket/activate", {
   "ticketID": 1,
@@ -460,7 +460,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("ticket/close", {
   "ticketID": 1,

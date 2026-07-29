@@ -125,7 +125,7 @@ const raw = await request('bug/list', { productID: 1 }, { raw: true });
 上述能力也以独立函数形式导出，可脱离 `request()` 对任意数据使用。详细签名见 [Reference](/reference/)。
 
 ```ts
-import { processData, filterData, searchData, sortData, pickFields } from 'zentao-api';
+import { processData, filterData, searchData, sortData, pickFields } from '@kerin/zentao-api';
 
 const list = [
   { id: 1, title: '登录失败', pri: 3, status: 'active' },

@@ -47,7 +47,7 @@
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("testcase/list", {
   "scope": "<string>",
@@ -185,7 +185,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("testcase/create", {
   "productID": 1,
@@ -236,7 +236,7 @@ const result = await request("testcase/create", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("testcase/get", {
   "caseID": 1
@@ -352,7 +352,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("testcase/update", {
   "testcasID": 1,
@@ -400,7 +400,7 @@ const result = await request("testcase/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("testcase/delete", {
   "testcasID": 1

@@ -41,7 +41,7 @@
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("build/list", {
   "scope": "<string>",
@@ -146,7 +146,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("build/create", {
   "executionID": 1,
@@ -260,7 +260,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("build/update", {
   "buildID": 1,
@@ -302,7 +302,7 @@ const result = await request("build/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("build/delete", {
   "buildID": 1

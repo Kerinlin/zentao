@@ -49,7 +49,7 @@
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("requirement/list", {
   "productID": 1,
@@ -175,7 +175,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("requirement/create", {
   "productID": 1,
@@ -222,7 +222,7 @@ const result = await request("requirement/create", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("requirement/get", {
   "storyID": 1
@@ -319,7 +319,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("requirement/update", {
   "requirementID": 1,
@@ -360,7 +360,7 @@ const result = await request("requirement/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("requirement/delete", {
   "requirementID": 1
@@ -420,7 +420,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("requirement/activate", {
   "requirementID": 1,
@@ -487,7 +487,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("requirement/change", {
   "requirementID": 1,
@@ -553,7 +553,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("requirement/close", {
   "requirementID": 1,

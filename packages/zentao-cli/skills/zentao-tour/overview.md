@@ -36,7 +36,7 @@ flowchart LR
 
 ## 什么是 zentao-cli
 
-[zentao-cli](https://github.com/easysoft/zentao-cli) 是官方命令行工具，封装了禅道 RESTful API v2.0，特点：
+[`@kerin/zentao-cli`](https://github.com/Kerinlin/zentao/tree/main/packages/zentao-cli) 是禅道命令行工具（本 monorepo 内 `packages/zentao-cli`），封装禅道 RESTful API v2.0，特点：
 
 - 覆盖 20+ 模块（产品、项目、执行、需求、Bug、任务、测试用例、计划、版本、发布、反馈、工单等）的 CRUD 与状态流转
 - 对 AI 友好：默认输出 Markdown 表格便于阅读，加 `--format=json` 可获取结构化数据
@@ -87,7 +87,7 @@ zentao login -s https://zentao.example.com -u <账号> -p <密码>
 }
 ```
 
-具体 MCP 启动方式与参数以 [zentao-cli 仓库](https://github.com/easysoft/zentao-cli) 的最新说明为准；不同智能工具的配置文件位置不同（Cursor 的 `~/.cursor/mcp.json`、Claude Desktop 的 `claude_desktop_config.json` 等）。
+具体 MCP 启动方式与参数以 [包 README](https://github.com/Kerinlin/zentao/blob/main/packages/zentao-cli/README.md) 为准；不同智能工具的配置文件位置不同（Cursor 的 `~/.cursor/mcp.json`、Claude Desktop 的 `claude_desktop_config.json` 等）。
 
 ## 就绪自检
 
@@ -111,4 +111,4 @@ zentao product --pick=id,name               # 能正常拉取产品列表
 - [禅道官网](https://www.zentao.net/)
 - [禅道使用手册](https://www.zentao.net/book/zentaopms/38.html)
 - [禅道不同版本功能对比](https://www.zentao.net/compare-features.html)
-- [zentao-cli 仓库](https://github.com/easysoft/zentao-cli)
+- [zentao-cli 包](https://github.com/Kerinlin/zentao/tree/main/packages/zentao-cli)

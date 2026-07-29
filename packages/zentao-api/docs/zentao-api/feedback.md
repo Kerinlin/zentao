@@ -48,7 +48,7 @@
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("feedback/list", {
   "productID": 1,
@@ -141,7 +141,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("feedback/create", {
   "product": 1,
@@ -181,7 +181,7 @@ const result = await request("feedback/create", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("feedback/get", {
   "feedbackID": 1
@@ -272,7 +272,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("feedback/update", {
   "feedbackID": 1,
@@ -312,7 +312,7 @@ const result = await request("feedback/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("feedback/delete", {
   "feedbackID": 1
@@ -372,7 +372,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("feedback/activate", {
   "feedbackID": 1,
@@ -437,7 +437,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("feedback/close", {
   "feedbackID": 1,

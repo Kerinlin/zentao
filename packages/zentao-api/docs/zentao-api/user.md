@@ -44,7 +44,7 @@
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("user/list", {
   "browseType": "inside",
@@ -115,7 +115,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("user/create", {
   "account": "<string>",
@@ -151,7 +151,7 @@ const result = await request("user/create", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("user/get", {
   "userID": 1
@@ -257,7 +257,7 @@ Schema:
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("user/update", {
   "userID": 1,
@@ -303,7 +303,7 @@ const result = await request("user/update", {
 ### SDK 示例
 
 ```ts
-import { request } from 'zentao-api';
+import { request } from '@kerin/zentao-api';
 
 const result = await request("user/delete", {
   "userID": 1

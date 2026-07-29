@@ -1,19 +1,25 @@
-# zentao-api
+# @kerin/zentao-api
 
-[![npm version](https://img.shields.io/npm/v/zentao-api)](https://www.npmjs.com/package/zentao-api)
-[![license](https://img.shields.io/npm/l/zentao-api)](./LICENSE)
-[![node](https://img.shields.io/node/v/zentao-api)](https://nodejs.org)
+[![npm version](https://img.shields.io/npm/v/@kerin/zentao-api)](https://www.npmjs.com/package/@kerin/zentao-api)
+[![license](https://img.shields.io/npm/l/@kerin/zentao-api)](./LICENSE)
+[![node](https://img.shields.io/node/v/@kerin/zentao-api)](https://nodejs.org)
 
 Browser & Node.js SDK for [ZenTao](https://www.zentao.net) (禅道) API v2.
 
-`zentao-api` 是一个面向禅道 API v2 的轻量 JavaScript/TypeScript SDK，可用于 Node.js 18+、浏览器打包工具以及 CDN/script 标签场景。
+`@kerin/zentao-api` 是一个面向禅道 API v2 的轻量 JavaScript/TypeScript SDK，可用于 Node.js 18+、浏览器打包工具以及 CDN/script 标签场景。本包位于 [zentao monorepo](https://github.com/Kerinlin/zentao) 的 `packages/zentao-api`。
 
 ---
 
 ## 安装 / Install
 
 ```sh
-npm install zentao-api
+npm install @kerin/zentao-api
+```
+
+Bun：
+
+```sh
+bun add @kerin/zentao-api
 ```
 
 ## 快速开始 / Quick Start
@@ -21,7 +27,7 @@ npm install zentao-api
 ### 创建客户端
 
 ```ts
-import { ZentaoClient } from 'zentao-api';
+import { ZentaoClient } from '@kerin/zentao-api';
 
 const client = new ZentaoClient({
   baseUrl: 'https://zentao.example.com',
@@ -45,7 +51,7 @@ const token = await client.login('admin', 'password');
 ### 全局客户端与模块请求
 
 ```ts
-import { ZentaoClient, request, setGlobalOptions } from 'zentao-api';
+import { ZentaoClient, request, setGlobalOptions } from '@kerin/zentao-api';
 
 ZentaoClient.init({
   baseUrl: 'https://zentao.example.com',
@@ -116,7 +122,7 @@ const client = await ZentaoClient.fromProfile('admin@https://zentao.example.com'
 SDK 所有传输层错误均通过 `ZentaoError` 抛出，包含稳定的错误码：
 
 ```ts
-import { ZentaoError } from 'zentao-api';
+import { ZentaoError } from '@kerin/zentao-api';
 
 try {
   await client.get('/products');
@@ -132,12 +138,12 @@ try {
 
 ## 扩展模块
 
-生成的模块定义来自 `scripts/update-registry.ts`。你可以在调用 `request()` 前扩展模块，或新增、替换动作。
+生成的模块定义来自 `scripts/update-registry.ts`（输入 `data/zentao-openapi.json`）。你可以在调用 `request()` 前扩展模块，或新增、替换动作。
 
 ### 新增模块
 
 ```ts
-import { defineModules } from 'zentao-api';
+import { defineModules } from '@kerin/zentao-api';
 
 defineModules({
   name: 'custom',
@@ -157,7 +163,7 @@ defineModules({
 ### 为已有模块追加动作
 
 ```ts
-import { defineModuleActions } from 'zentao-api';
+import { defineModuleActions } from '@kerin/zentao-api';
 
 defineModuleActions('bug', {
   name: 'archive',
@@ -174,7 +180,7 @@ defineModuleActions('bug', {
 只想改动作的个别字段（而不是整体替换）时，用 `extendModuleAction`。传入补丁对象会与原动作**深度合并**：普通对象递归合并，数组及其他值整体替换，`undefined` 的键会被忽略。
 
 ```ts
-import { extendModuleAction } from 'zentao-api';
+import { extendModuleAction } from '@kerin/zentao-api';
 
 // 改写 task/list 的 URL
 extendModuleAction('task', 'list', {
@@ -216,7 +222,7 @@ import type {
   ModuleAction,
   ResponseData,
   RequestOptions,
-} from 'zentao-api';
+} from '@kerin/zentao-api';
 ```
 
 ## 浏览器
@@ -224,18 +230,22 @@ import type {
 浏览器打包工具可以正常导入这个包：
 
 ```ts
-import { ZentaoClient } from 'zentao-api';
+import { ZentaoClient } from '@kerin/zentao-api';
+// 或显式 browser 子路径（与主入口等价，不注入全局变量）
+import { ZentaoClient } from '@kerin/zentao-api/browser';
 ```
 
-如果使用 script 标签，请使用浏览器构建包，并从 `window.ZentaoAPI` 读取 API：
+如果使用 script 标签，请使用浏览器 IIFE 构建包，并从 `window.ZentaoAPI` 读取 API：
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/zentao-api@latest/dist/browser/zentao-api.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@kerin/zentao-api@latest/dist/browser/zentao-api.global.js"></script>
 <script>
   console.log(window.ZentaoAPI.VERSION, window.ZentaoAPI.BUILD);
   const client = new window.ZentaoAPI.ZentaoClient('https://zentao.example.com');
 </script>
 ```
+
+也可通过子路径 `@kerin/zentao-api/browser/global` 引用同一 IIFE 产物。
 
 > **CORS**：浏览器直接请求要求禅道服务器允许 CORS。浏览器代码也会把 token 暴露给前端；如果这不可接受，请使用后端代理。
 >
@@ -243,12 +253,14 @@ import { ZentaoClient } from 'zentao-api';
 
 ## 测试
 
-本仓库开发依赖管理仅使用 [Bun](https://bun.sh)（`bun install`）。请勿使用 npm / pnpm / yarn，以免生成其它 lockfile。
+本 monorepo 开发依赖管理仅使用 [Bun](https://bun.sh)（在仓根 `bun install`）。请勿使用 npm / pnpm / yarn 安装 workspace 依赖，以免生成其它 lockfile。
+
+在本包目录下：
 
 ```sh
 bun test              # 单元测试
 bun run test:coverage # 含覆盖率的单元测试
-bun run check         # 完整 CI 流程：测试 + 类型检查 + 注册表 + 构建 + 冒烟测试
+bun run check         # 完整 CI：测试 + 类型检查 + 注册表 + 构建 + 冒烟测试
 ```
 
 ### 真实环境测试
@@ -276,24 +288,43 @@ bun run test:real -- --keep-test-data   # 保留临时数据以便手动检查
 ## 项目结构
 
 ```
-zentao-api/
+packages/zentao-api/
 ├── src/
-│   ├── client/         # ZentaoClient 核心实现
-│   ├── modules/        # 模块注册表与解析逻辑
-│   │   ├── generated.ts  # 自动生成，勿手动编辑
-│   │   ├── registry.ts   # 运行时注册表
-│   │   └── resolve.ts    # 路径模板与参数解析
-│   ├── request/        # 高阶请求函数
-│   ├── profiles/       # 本地 profile 持久化
-│   ├── misc/           # 错误、全局选项、环境检测
-│   ├── types/          # TypeScript 类型定义
-│   ├── utils/          # 通用工具函数
-│   └── index.ts        # 公共 API 入口
-├── scripts/            # 构建与代码生成脚本
-├── tests/              # 单元测试与真实环境测试
-├── data/               # OpenAPI 规范文件
-└── dist/               # 构建产物
+│   ├── client/            # ZentaoClient 核心实现
+│   ├── modules/           # 模块注册表
+│   │   ├── generated.ts   # OpenAPI 自动生成，勿手动编辑
+│   │   ├── override.ts    # 内置手写补丁
+│   │   ├── define.ts      # defineModules / defineModuleActions / extendModuleAction
+│   │   ├── query.ts       # getModule / getModuleNames 等只读 API
+│   │   ├── registry-store.ts
+│   │   ├── registry.ts    # barrel
+│   │   └── resolve.ts     # 路径模板与参数解析
+│   ├── request/           # 高阶 request()
+│   ├── profiles/          # 本地 profile 持久化
+│   ├── misc/              # 错误、全局选项、环境检测
+│   ├── types/             # TypeScript 类型
+│   ├── utils/             # 通用工具
+│   ├── browser.ts         # browser 子路径入口（不注入全局）
+│   ├── browser-global.ts  # IIFE 入口 → window.ZentaoAPI
+│   └── index.ts           # 公共 API 入口
+├── scripts/               # 构建、注册表生成、文档、冒烟
+├── tests/
+├── data/                  # OpenAPI 规范
+├── docs/                  # VitePress（guide / reference / zentao-api）
+└── dist/                  # 构建产物
 ```
+
+## 文档站点
+
+```sh
+bun run docs:dev      # 生成本地文档并预览
+bun run docs:generate # 刷新 typedoc reference + 模块 API 页
+bun run docs:build    # 构建静态站到 docs/.vitepress/dist
+```
+
+- `docs/guide/` — 手写指南
+- `docs/reference/` — typedoc 自动生成，勿手改
+- `docs/zentao-api/` — 从模块注册表自动生成，勿手改
 
 ## 贡献
 
@@ -302,6 +333,8 @@ zentao-api/
 ```sh
 bun run check
 ```
+
+在 monorepo 根目录也可用 `bun run build` / `bun run test` 做跨包验证。CLI 包 `@kerin/zentao-cli` 依赖本 SDK 的 `dist`，改源码后需重建本包。
 
 ## 许可证 / License
 
