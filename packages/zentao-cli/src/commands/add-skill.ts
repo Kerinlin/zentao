@@ -3,8 +3,8 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createInterface } from 'node:readline';
 import type { GlobalOptions } from '../types/index.js';
+import { multiSelect } from '../utils/multi-select.js';
 
 interface AgentTarget {
     label: string;
@@ -59,31 +59,24 @@ async function promptAgentSelection(): Promise<string[]> {
         );
     }
 
-    const choices = [...AGENT_NAMES, 'all'];
-    const labels = [
-        ...AGENT_NAMES.map((name) => AGENT_TARGETS[name].label),
-        '全部安装',
-    ];
-
-    const rl = createInterface({ input: process.stdin, output: process.stderr });
-
-    process.stderr.write('请选择要安装的 AI Agent:\n');
-    labels.forEach((label, index) => {
-        process.stderr.write(`  ${index + 1}) ${label}\n`);
-    });
-
-    return new Promise((resolve, reject) => {
-        rl.question(`请输入编号 (1-${choices.length}): `, (answer) => {
-            rl.close();
-            const idx = Number(answer.trim());
-            if (!Number.isInteger(idx) || idx < 1 || idx > choices.length) {
-                reject(new Error(`无效选择: ${answer || '(empty)'}`));
-                return;
-            }
-            const selected = choices[idx - 1];
-            resolve(selected === 'all' ? [...AGENT_NAMES] : [selected]);
+    try {
+        return await multiSelect({
+            title: '请选择要安装的 AI Agent（可多选）:',
+            items: AGENT_NAMES.map((name) => ({
+                value: name,
+                label: AGENT_TARGETS[name].label,
+            })),
+            min: 1,
         });
-    });
+    } catch (error) {
+        const msg = String((error as Error).message ?? error);
+        if (msg.includes('不支持交互多选') || msg.includes('当前终端')) {
+            throw new Error(
+                `未指定 agent，请在交互终端中选择，或显式传入: ${AGENT_NAMES.join('|')}|all`,
+            );
+        }
+        throw error;
+    }
 }
 
 function resolveAgents(agent: string): string[] {
@@ -120,6 +113,21 @@ function installSkill(agent: string, skillName: string, silent: boolean): void {
     }
 }
 
+/**
+ * 安装技能（供 `add-skill` 命令与 `install` 同进程调用）。
+ * 未传 agent 时走交互多选。
+ */
+export async function runAddSkill(options: { agent?: string; silent?: boolean } = {}): Promise<void> {
+    const silent = !!options.silent;
+    const agents = options.agent ? resolveAgents(options.agent) : await promptAgentSelection();
+
+    for (const a of agents) {
+        for (const skillName of SKILL_NAMES) {
+            installSkill(a, skillName, silent);
+        }
+    }
+}
+
 /** 注册 `zentao add-skill`：安装禅道 CLI 技能到 AI Agent */
 export function registerAddSkillCommand(program: Command): void {
     program
@@ -128,16 +136,8 @@ export function registerAddSkillCommand(program: Command): void {
         .argument('[agent]', `目标 Agent (${AGENT_NAMES.join('|')}|all)`)
         .action(async (agent?: string) => {
             const globalOpts = program.opts() as GlobalOptions;
-            const silent = !!globalOpts.silent;
-
             try {
-                const agents = agent ? resolveAgents(agent) : await promptAgentSelection();
-
-                for (const a of agents) {
-                    for (const skillName of SKILL_NAMES) {
-                        installSkill(a, skillName, silent);
-                    }
-                }
+                await runAddSkill({ agent, silent: !!globalOpts.silent });
             } catch (error) {
                 console.error(String((error as Error).message ?? error));
                 process.exit(1);

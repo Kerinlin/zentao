@@ -79,4 +79,10 @@ export interface ModuleActionOptions extends GlobalOptions {
 
     /** 执行 ID，当 scope 为 executions 时，等同于 scopeID 参数 */
     execution?: string;
+
+    /**
+     * Markdown 文件路径：读取后转为禅道轻量 HTML 写入 `steps`。
+     * 与 `--steps` / `--data.steps` 互斥。
+     */
+    stepsFile?: string;
 }

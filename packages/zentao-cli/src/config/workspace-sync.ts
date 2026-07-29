@@ -117,6 +117,88 @@ function firstProductFromList(value: unknown): WorkspaceRef | undefined {
     return undefined;
 }
 
+/** 从列表项上提取 product id（兼容 number / 对象 / 字符串数字） */
+export function extractProductIdFromItem(item: unknown): number | undefined {
+    if (!isRecord(item)) return undefined;
+    const raw = item.product ?? item.productID ?? item.productId;
+    if (isRecord(raw)) {
+        const id = Number(raw.id);
+        return !Number.isNaN(id) && id > 0 ? id : undefined;
+    }
+    const id = Number(raw);
+    return !Number.isNaN(id) && id > 0 ? id : undefined;
+}
+
+/**
+ * 在样本中统计出现最多的 product id。
+ * 用于「无产品项目」(hasProduct=0) 时从项目下 Bug/Story 反查。
+ */
+export function pickMajorityProductId(items: unknown[]): number | undefined {
+    const counts = new Map<number, number>();
+    for (const item of items) {
+        const id = extractProductIdFromItem(item);
+        if (id === undefined) continue;
+        counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    if (counts.size === 0) return undefined;
+
+    let bestId: number | undefined;
+    let bestCount = -1;
+    for (const [id, count] of counts) {
+        if (count > bestCount) {
+            bestId = id;
+            bestCount = count;
+        }
+    }
+    return bestId;
+}
+
+function unwrapListPayload(raw: unknown, listKeys: string[]): unknown[] {
+    if (Array.isArray(raw)) return raw;
+    if (!isRecord(raw)) return [];
+    for (const key of listKeys) {
+        const value = raw[key];
+        if (Array.isArray(value)) return value;
+    }
+    if (Array.isArray(raw.data)) return raw.data;
+    return [];
+}
+
+/**
+ * 当项目详情未带关联产品时，从项目下业务对象反查 product。
+ * 优先 Bug 列表，其次 Story；失败时返回 undefined（不阻断建区）。
+ */
+export async function inferProductFromProject(
+    client: ZentaoClient,
+    projectId: number,
+): Promise<WorkspaceRef | undefined> {
+    const paths = [
+        `/projects/${projectId}/bugs?recPerPage=20&pageID=1&browseType=all`,
+        `/projects/${projectId}/stories?recPerPage=20&pageID=1`,
+    ];
+    const listKeys = ['bugs', 'stories'];
+
+    let productId: number | undefined;
+    for (const path of paths) {
+        try {
+            const raw = await client.get(path);
+            const items = unwrapListPayload(raw, listKeys);
+            productId = pickMajorityProductId(items);
+            if (productId !== undefined) break;
+        } catch {
+            // 软失败：继续下一条路径
+        }
+    }
+    if (productId === undefined) return undefined;
+
+    try {
+        const product = await fetchProduct(client, productId);
+        return toWorkspaceRef(product, productId);
+    } catch {
+        return { id: productId, name: `#${productId}` };
+    }
+}
+
 /** 从产品对象构造工作区引用（仅 product） */
 export function refsFromProduct(product: Record<string, unknown>, idHint?: number): WorkspaceScopeRefs {
     const productRef = toWorkspaceRef(product, idHint);
@@ -199,6 +281,12 @@ export async function buildRefsFromScopeOptions(
             project: refs.project ?? fromExecution.project,
             product: refs.product ?? fromExecution.product,
         });
+    }
+
+    // 无产品项目 (hasProduct=0) 或详情缺 products：从项目下 Bug/Story 反查补全
+    if (!refs.product && refs.project?.id) {
+        const inferred = await inferProductFromProject(client, refs.project.id);
+        if (inferred) refs.product = inferred;
     }
 
     if (options.name?.trim()) {
@@ -288,6 +376,11 @@ export async function autoSetWorkspaceFromResult(
     if (moduleName === 'product') refs = refsFromProduct(record, id);
     else if (moduleName === 'project') refs = refsFromProject(record, id);
     else refs = refsFromExecution(record, id);
+
+    if (!refs.product && refs.project?.id) {
+        const inferred = await inferProductFromProject(client, refs.project.id);
+        if (inferred) refs.product = inferred;
+    }
 
     if (!refs.product && !refs.project && !refs.execution) return undefined;
     return upsertWorkspaceByScope(profile, refs);

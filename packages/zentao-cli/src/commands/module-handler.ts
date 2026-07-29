@@ -308,6 +308,7 @@ export function showModuleHelp(mod: ModuleDefinition): void {
         { name: 'data', placeholder: 'json', description: '请求数据（JSON 格式），适用于 create/update 操作' },
         { name: 'params', placeholder: 'json', description: 'API 调用参数（JSON 对象），可替代单独的 --key=value 传参' },
         { name: 'options', placeholder: 'json', description: 'CLI 调用选项（JSON 对象），可替代单独的公共选项' },
+        { name: 'steps-file', placeholder: 'path', description: '从 Markdown 文件读取 steps 并转为禅道轻量 HTML（与 --steps 互斥），适用于 create/update' },
         { name: 'yes', description: '跳过确认提示，适用于 delete 操作' },
         { name: 'silent', description: '静默模式，不输出任何结果' },
         // { name: 'batch-fail-fast', description: '批量操作遇到错误时立即停止，适用于批量 create/update/delete 操作' },
@@ -445,6 +446,13 @@ export function showModuleActionHelp(mod: ModuleDefinition, action: ModuleAction
     commonOpts.push({ name: 'silent', description: '静默模式，不输出任何结果' });
     if (action.type !== 'list' && action.type !== 'get') {
         commonOpts.push({ name: 'batch-fail-fast', description: '批量操作遇到错误时立即停止' });
+    }
+    if (action.type === 'create' || action.type === 'update' || action.type === 'action') {
+        commonOpts.push({
+            name: 'steps-file',
+            placeholder: 'path',
+            description: '从 Markdown 文件读取 steps 并转为禅道轻量 HTML（与 --steps / --data.steps 互斥）',
+        });
     }
 
     console.log('\n公共选项:');

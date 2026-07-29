@@ -222,7 +222,7 @@ export function registerWorkspaceCommand(program: Command): void {
     addScopeOptions(
         wsCmd
             .command('add')
-            .description('按产品/项目/执行新建或切换到对应工作区（按主键复用）'),
+            .description('按产品/项目/执行新建或切换到对应工作区（按主键复用；仅传项目时会尝试反查关联产品）'),
     ).action(async (opts: Record<string, string>) => {
         const globalOpts = program.opts() as GlobalOptions;
         try {

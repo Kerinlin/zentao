@@ -1,10 +1,12 @@
 import { Command } from 'commander';
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { basename } from 'node:path';
 import { createInterface, type Interface } from 'node:readline';
 import type { GlobalOptions } from '../types/index.js';
 import { PACKAGE_NAME, fetchLatestVersion } from '../utils/update-notifier.js';
 import { getCurrentProfile } from '../config/store.js';
+import { runAddSkill } from './add-skill.js';
 
 const NODE_MIN_MAJOR = 18;
 const NODE_LTS_MAJOR = 22;
@@ -34,6 +36,13 @@ function drainStdin(): Promise<void> {
     return new Promise((resolve) => setImmediate(resolve));
 }
 
+function safeCloseRl(rl: Interface): void {
+    try {
+        rl.close();
+    } catch {
+        /* already closed */
+    }
+}
 
 /** 获取 node 版本号（如 '20.11.0'），未装返回 null */
 function getNodeVersion(): string | null {
@@ -68,9 +77,8 @@ function resolveNpmGlobalBin(): string | null {
     }
 }
 
-/** 解析 zentao 可执行文件路径：优先 PATH，再 fallback 到 npm 全局 bin */
-function resolveZentaoBin(): string {
-    // 1) 直接 PATH 命中
+/** PATH / npm global 上的 zentao（仅作自调用失败时的兜底） */
+function resolveZentaoBinFromPath(): string {
     const direct = spawnSync(
         process.platform === 'win32' ? 'where' : 'which',
         ['zentao'],
@@ -80,7 +88,6 @@ function resolveZentaoBin(): string {
         const found = direct.stdout.trim().split(/\r?\n/)[0];
         if (found) return found;
     }
-    // 2) npm 全局 bin
     const binDir = resolveNpmGlobalBin();
     if (binDir) {
         const candidate = process.platform === 'win32'
@@ -88,13 +95,35 @@ function resolveZentaoBin(): string {
             : `${binDir}/zentao`;
         if (existsSync(candidate)) return candidate;
     }
-    // 3) fallback 让 shell 自己找
     return 'zentao';
 }
 
-/** 调用 zentao 子命令（继承 stdio，触发其内置交互） */
+/**
+ * 用当前进程同一入口再跑子命令，避免 install 命中 PATH 上旧版全局 zentao。
+ * - node/bun + script：`execPath entry ...args`
+ * - standalone 二进制：`execPath ...args`
+ */
 function runZentaoSubcommand(args: string[]): number {
-    const zentaoBin = resolveZentaoBin();
+    const entry = process.argv[1];
+    if (entry && existsSync(entry)) {
+        const result = spawnSync(process.execPath, [entry, ...args], {
+            stdio: 'inherit',
+            encoding: 'utf-8',
+        });
+        return result.status ?? 1;
+    }
+
+    const execBase = basename(process.execPath);
+    const isRuntime = /^(node|bun)(\.exe)?$/i.test(execBase);
+    if (!isRuntime) {
+        const result = spawnSync(process.execPath, args, {
+            stdio: 'inherit',
+            encoding: 'utf-8',
+        });
+        return result.status ?? 1;
+    }
+
+    const zentaoBin = resolveZentaoBinFromPath();
     const result = spawnSync(zentaoBin, args, {
         stdio: 'inherit',
         shell: process.platform === 'win32',
@@ -158,7 +187,9 @@ export function registerInstallCommand(program: Command): void {
             });
 
             try {
-                // 步骤 1：幂等检测 + 远程版本对比，远程较新则自动升级
+                // 步骤 1：幂等检测 + 远程版本对比
+                // - 已是最新 / 无法获取远程：不询问，直接进入后续配置
+                // - 本地 ≠ 远程：交互询问 跳过 / 覆盖升级 / 退出；非交互默认覆盖升级
                 const installed = getInstalledCliVersion();
                 if (installed) {
                     let latest: string | null = null;
@@ -166,30 +197,35 @@ export function registerInstallCommand(program: Command): void {
                         latest = await fetchLatestVersion();
                     } catch { /* 离线场景忽略 */ }
 
-                    if (latest && latest !== installed) {
-                        // 远程较新：直接升级，不问
-                        console.log(`检测到 zentao-cli ${installed} → ${latest}，自动升级...`);
-                        // 继续走步骤 2~4 执行全局安装
-                    } else {
-                        // 已是最新或无法获取远程版本
-                        const label = latest ? `${installed}（已是最新版）` : `${installed}（无法获取远程版本）`;
+                    if (!latest || latest === installed) {
+                        const label = latest
+                            ? `${installed}（已是最新版）`
+                            : `${installed}（无法获取远程版本）`;
                         console.log(`检测到已安装 zentao-cli ${label}`);
-                        let action: 'skip' | 'upgrade' | 'exit' = 'skip';
-                        if (interactive) {
-                            const a = await ask(rl, '已安装，请选择: 1) 跳过安装 2) 覆盖升级 3) 退出 [1] ');
-                            if (a === '2') action = 'upgrade';
-                            else if (a === '3') action = 'exit';
-                        }
-                        if (action === 'exit') {
-                            console.log('已退出。');
-                            return;
-                        }
-                        if (action === 'skip') {
-                            console.log('跳过安装步骤，继续配置流程。\n');
-                            await runPostInstallFlow(rl, interactive);
-                            return;
-                        }
+                        console.log('跳过安装步骤，继续配置流程。\n');
+                        await runPostInstallFlow(rl, interactive);
+                        return;
                     }
+
+                    console.log(`检测到 zentao-cli 本地 ${installed}，远程 ${latest}`);
+                    let action: 'skip' | 'upgrade' | 'exit' = interactive ? 'skip' : 'upgrade';
+                    if (interactive) {
+                        const a = await ask(rl, '本地与远程版本不一致，请选择: 1) 跳过安装 2) 覆盖升级 3) 退出 [1] ');
+                        if (a === '2') action = 'upgrade';
+                        else if (a === '3') action = 'exit';
+                        else action = 'skip';
+                    }
+                    if (action === 'exit') {
+                        console.log('已退出。');
+                        return;
+                    }
+                    if (action === 'skip') {
+                        console.log('跳过安装步骤，继续配置流程。\n');
+                        await runPostInstallFlow(rl, interactive);
+                        return;
+                    }
+                    console.log(`覆盖升级 ${installed} → ${latest}...`);
+                    // 继续走步骤 2~4 执行全局安装
                 }
 
                 // 步骤 2：Node 检测
@@ -224,7 +260,7 @@ export function registerInstallCommand(program: Command): void {
                 console.log('\n✓ zentao-cli 安装完成');
                 await runPostInstallFlow(rl, interactive);
             } finally {
-                rl.close();
+                safeCloseRl(rl);
             }
         });
 }
@@ -239,7 +275,7 @@ async function runPostInstallFlow(rl: Interface, interactive: boolean): Promise<
         return;
     }
 
-    // 步骤 5：登录（已有配置时询问是否重新配置，login 会回显已有字段）
+    // 步骤 5/6：先用 readline 收齐 Y/N，再释放 stdin 给 login / 多选
     const existing = getCurrentProfile();
     let doLogin: boolean;
     if (existing) {
@@ -248,7 +284,14 @@ async function runPostInstallFlow(rl: Interface, interactive: boolean): Promise<
     } else {
         doLogin = await confirm(rl, '\n是否立即登录禅道服务？', true);
     }
+    const doSkill = await confirm(rl, '\n是否安装 zentao CLI 技能到 AI Agent？', true);
+
+    // 必须关闭 readline：否则子进程/raw mode 多选仍占着旧 stdin 监听
+    safeCloseRl(rl);
+    await drainStdin();
+
     if (doLogin) {
+        // 与当前进程同一入口，避免 PATH 上的全局旧版 zentao
         const status = runZentaoSubcommand(['login']);
         if (status !== 0) {
             console.error('登录失败，请稍后使用 `zentao login` 重试。');
@@ -256,14 +299,12 @@ async function runPostInstallFlow(rl: Interface, interactive: boolean): Promise<
         }
     }
 
-    // 步骤 6：技能安装
-    let doSkill = true;
-    if (interactive) {
-        doSkill = await confirm(rl, '\n是否安装 zentao CLI 技能到 AI Agent？', true);
-    }
     if (doSkill) {
-        const status = runZentaoSubcommand(['add-skill']);
-        if (status !== 0) {
+        try {
+            // 同进程调用，保证用的是本包 multi-select，而不是 PATH 旧版
+            await runAddSkill();
+        } catch (error) {
+            console.error(String((error as Error).message ?? error));
             console.error('技能安装失败，请稍后使用 `zentao add-skill` 重试。');
             process.exit(1);
         }

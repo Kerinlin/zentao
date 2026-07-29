@@ -27,6 +27,8 @@ import {
     setWorkspaceFromScopeOptions,
     toWorkspaceRef,
     autoSetWorkspaceFromResult,
+    pickMajorityProductId,
+    inferProductFromProject,
 } from '../src/config/workspace-sync.js';
 import { saveProfile, setConfigPath, getCurrentProfile } from '../src/config/store.js';
 import type { ZentaoClient } from '../src/api/index.js';
@@ -341,6 +343,18 @@ describe('workspace-sync helpers', () => {
             product: { id: 1, name: '#1' },
         });
     });
+
+    test('pickMajorityProductId from bug samples', () => {
+        expect(pickMajorityProductId([
+            { id: 1, product: 189 },
+            { id: 2, product: 189 },
+            { id: 3, product: 10 },
+        ])).toBe(189);
+        expect(pickMajorityProductId([
+            { product: { id: 5, name: 'P' } },
+        ])).toBe(5);
+        expect(pickMajorityProductId([])).toBeUndefined();
+    });
 });
 
 describe('setWorkspaceFromScopeOptions + autoSet', () => {
@@ -426,6 +440,58 @@ describe('setWorkspaceFromScopeOptions + autoSet', () => {
         expect(ws.project).toEqual({ id: 5, name: '项目5' });
         expect(ws.product).toEqual({ id: 1, name: 'P' });
         void client;
+    });
+
+    test('setWorkspaceFromScopeOptions --project infers product from project bugs when hasProduct=0', async () => {
+        saveProfile({ ...mockProfile });
+        const clientGet = {
+            async get(path: string) {
+                if (path === '/projects/1278') {
+                    return {
+                        status: 'success',
+                        project: { id: 1278, name: '星联', hasProduct: 0 },
+                    };
+                }
+                if (path.startsWith('/projects/1278/bugs')) {
+                    return {
+                        status: 'success',
+                        bugs: [
+                            { id: 1, product: 189, title: 'a' },
+                            { id: 2, product: 189, title: 'b' },
+                        ],
+                    };
+                }
+                throw new Error(path);
+            },
+            async request(path: string) {
+                if (path === '/products/189') {
+                    return { status: 'success', product: { id: 189, name: '产品189' } };
+                }
+                throw new Error(path);
+            },
+        } as unknown as ZentaoClient;
+
+        const ws = await setWorkspaceFromScopeOptions(clientGet, getCurrentProfile()!, {
+            project: 1278,
+            name: '星联叫应平台 2 期',
+        });
+        expect(ws.project).toEqual({ id: 1278, name: '星联' });
+        expect(ws.product).toEqual({ id: 189, name: '产品189' });
+        expect(ws.name).toBe('星联叫应平台 2 期');
+    });
+
+    test('inferProductFromProject soft-fails when lists empty', async () => {
+        const client = {
+            async get(path: string) {
+                if (path.includes('/bugs')) return { status: 'success', bugs: [] };
+                if (path.includes('/stories')) return { status: 'success', stories: [] };
+                throw new Error(path);
+            },
+            async request() {
+                throw new Error('no product fetch');
+            },
+        } as unknown as ZentaoClient;
+        expect(await inferProductFromProject(client, 1)).toBeUndefined();
     });
 
     test('autoSetWorkspaceFromResult on product get', async () => {

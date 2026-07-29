@@ -54,8 +54,16 @@ zentao testtask --product=<产品ID> --pick=id,name,status
 
 和用户商量 Bug 的标题、严重度（`severity`）、优先级（`pri`）、重现步骤（`steps`）。严重度和优先级给个建议（比如"看起来能用就是有点歪，那严重 3 优先 3？"），让他点头即可。
 
+复现步骤推荐写 Markdown 文件，用 `--steps-file`（CLI 会转成禅道 HTML）；有截图先 `zentao upload`，把返回 URL 写进 MD 的 `![](url)`。
+
 ```bash
-zentao bug create --product=<产品ID> --title="..." --severity=<1-4> --pri=<1-4> --type=codeerror --steps="..."
+# 推荐
+zentao bug create --product=<产品ID> --title="..." --severity=<1-4> --pri=<1-4> \
+  --type=codeerror --openedBuild=trunk --steps-file=./bug-steps.md
+
+# 短描述仍可用
+zentao bug create --product=<产品ID> --title="..." --severity=<1-4> --pri=<1-4> \
+  --type=codeerror --openedBuild=trunk --steps="..."
 ```
 
 顺手演示状态流转（边执行边用一句话解释它代表开发解决了、你关掉了）：
@@ -82,7 +90,7 @@ zentao bug close <id>
 | 挑目标需求 | `zentao story --product=<id> --filter='stage:wait,stage:developing'` |
 | 建用例 | `zentao testcase create --product= --story= --title= --pri= --type=feature` |
 | 建测试单 | `zentao testtask create --product= --name= --begin= --end=` |
-| 提 Bug | `zentao bug create --product= --title= --severity= --pri= --type=codeerror --steps=` |
+| 提 Bug | `zentao bug create --product= --title= --severity= --pri= --type=codeerror --openedBuild=trunk --steps-file=` |
 | 解决 Bug | `zentao bug resolve <id> --resolution=fixed` |
 | 关闭 Bug | `zentao bug close <id>` |
 

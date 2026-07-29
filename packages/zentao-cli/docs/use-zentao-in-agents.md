@@ -40,21 +40,14 @@ $ npm install -g @kerin/zentao-cli
 # npx @kerin/zentao-cli             # ← 通过 npx 免安装运行
 # pnpm dlx @kerin/zentao-cli        # ← 通过 pnpm 免安装运行
 
-# 安装完成之后可以一键安装技能到 Agents
+# 安装完成之后可以一键安装技能到 Agents（↑↓ 移动，空格勾选，a 全选，回车确认）
 $ zentao add-skill
 
-请选择要安装的 AI Agent:
-  1) Claude Code
-  2) Cursor
-  3) Cherry Studio
-  4) Codex
-  5) OpenCode
-  6) VS Code
-  7) Antigravity
-  8) Gemini
-  9) WorkBuddy
-  10) 全部安装
-请输入编号 (1-10):10
+请选择要安装的 AI Agent（可多选）:
+❯ [x] Claude Code
+  [x] Cursor
+  [ ] Cherry Studio
+  ...
 ```
 
 ## 账号登录

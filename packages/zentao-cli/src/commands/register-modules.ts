@@ -28,7 +28,8 @@ export function addDataOptions(cmd: Command): Command {
         .option('--id <id>', '对象 ID')
         .option('--product <id>', '产品 ID')
         .option('--project <id>', '项目 ID')
-        .option('--execution <id>', '执行 ID');
+        .option('--execution <id>', '执行 ID')
+        .option('--steps-file <path>', '从 Markdown 文件读取 steps 并转为禅道 HTML（与 --steps 互斥）');
 }
 
 /** Commander 的 `collect` 回调：将多次出现的选项累积为数组 */

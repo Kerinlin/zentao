@@ -60,7 +60,7 @@ bun run watch:api
 
 ### 一键发版（推荐）
 
-交互式脚本，自动处理声明变更、版本计算、build 验证、发布、打 tag、推送：
+交互式脚本：你只选包与版本类型（patch / minor / major），changelog 从上次发版 tag 之后的 git log 自动生成；随后 version → build 验证 → publish → tag → push。
 
 ```bash
 bun run release

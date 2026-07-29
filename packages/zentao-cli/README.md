@@ -30,7 +30,7 @@
 
 ### 一键安装（推荐）
 
-自动检测 Node.js、包管理器，并引导完成登录与 AI 技能安装。已安装则会询问是否覆盖升级。
+自动检测 Node.js、包管理器，并引导完成登录与 AI 技能安装。已是最新版时跳过安装直接进入配置；仅当本地与远程版本不一致时询问跳过/覆盖/退出。
 
 **macOS / Linux:**
 
@@ -172,21 +172,15 @@ zentao bug help
 详细使用可以参考：[在 Agents 中使用禅道](docs/use-zentao-in-agents.md)，下面简单介绍。
 
 ```bash
-# 安装 zentao-cli 技能
+# 安装 zentao-cli 技能（交互：↑↓ 移动，空格勾选，a 全选，回车确认）
 $ zentao add-skill
 
-请选择要安装的 AI Agent:
-  1) Claude Code
-  2) Cursor
-  3) Cherry Studio
-  4) Codex
-  5) OpenCode
-  6) VS Code
-  7) Antigravity
-  8) Gemini
-  9) WorkBuddy
-  10) 全部安装
-请输入编号 (1-10): 10
+请选择要安装的 AI Agent（可多选）:
+❯ [x] Claude Code
+  [x] Cursor
+  [ ] Cherry Studio
+  ...
+↑↓ 移动  空格 勾选  a 全选  回车 确认  Ctrl+C 取消
 
 # 安装技能到 Claude Code
 $ zentao add-skill claude-code
