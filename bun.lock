@@ -6,6 +6,7 @@
       "name": "zentao-monorepo",
       "devDependencies": {
         "@changesets/cli": "^2.27.12",
+        "@types/bun": "^1.3.13",
         "typescript": "^5.7.0",
       },
     },
