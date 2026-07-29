@@ -12,7 +12,8 @@
     "dev": "cd packages/zentao-cli && bun run dev",
     "changeset": "changeset",
     "version": "changeset version",
-    "publish:pkgs": "changeset publish"
+    "publish:pkgs": "changeset publish",
+    "release": "bun run scripts/release.ts"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.12",
