@@ -37,14 +37,28 @@ const BUG_TYPE = z.enum([
     'others',
 ]).optional();
 
+/** Documented for AI: client-side filter syntax (same as CLI --filter). */
+export const LIST_BUGS_FILTER_GUIDE = [
+    '客户端过滤（仅作用于本页返回数据，非整库服务端查询）。',
+    '语法: field op value；单条内逗号=AND；多条 filter=OR。',
+    '运算符: = 或 :（等于）、!=、>、<、>=、<=、~（包含）、!~（不包含）。',
+    '常用字段: status、assignedTo、openedBy、pri、severity、type、title、product、project、confirmed。',
+    'status 取值: active | resolved | closed；关单后 assignedTo 常为 closed。',
+    '示例: status=active | status!=closed | assignedTo=pgtmn | openedBy=pgtmn | pri<=2 | title~登录',
+    '示例数组: ["status=active"]；AND: ["status=active,pri<=2"]；OR: ["status=active","status=resolved"]。',
+].join(' ');
+
 export const listBugsSchema = {
     projectId: z.number().optional().describe('项目 ID（与 productId/executionId 三选一）'),
     productId: z.number().optional().describe('产品 ID（与 projectId/executionId 三选一）'),
     executionId: z.number().optional().describe('执行 ID（与 projectId/productId 三选一）'),
     page: z.number().optional().describe('页码，默认 1'),
-    recPerPage: z.number().optional().describe('每页条数，默认 250'),
-    browseType: z.enum(BROWSE_TYPES).optional().describe('浏览类型，默认 unclosed'),
-    orderBy: z.string().optional().describe('排序，如 id_desc、severity_asc'),
+    recPerPage: z.number().optional().describe('每页条数，默认 1000（API 上限 1000）'),
+    browseType: z.enum(BROWSE_TYPES).optional().describe(
+        '服务端浏览预设，默认 all。字段级筛选请用 filter，勿依赖 browseType 表达 status/指派人',
+    ),
+    orderBy: z.string().optional().describe('服务端排序，默认 id_desc（新→旧）；可选 severity_asc、title_desc 等'),
+    filter: z.array(z.string()).optional().describe(LIST_BUGS_FILTER_GUIDE),
     pick: z.string().optional().describe('摘取字段（逗号分隔）；未指定时默认省略 steps'),
 };
 
@@ -70,37 +84,71 @@ async function handleListBugs(input: {
     recPerPage?: number;
     browseType?: (typeof BROWSE_TYPES)[number];
     orderBy?: string;
+    filter?: string[];
     pick?: string;
 }, auth: AuthProvider): Promise<CallToolResult> {
     const scope = resolveListScope(input);
     const page = input.page ?? 1;
-    const recPerPage = input.recPerPage ?? 250;
-    const browseType = input.browseType ?? 'unclosed';
+    const recPerPage = input.recPerPage ?? 1000;
+    const browseType = input.browseType ?? 'all';
+    const orderBy = input.orderBy ?? 'id_desc';
+    const filter = input.filter?.map((s) => s.trim()).filter(Boolean) ?? [];
 
-    const queryParams: Record<string, unknown> = { browseType };
-    if (input.orderBy) queryParams.orderBy = input.orderBy;
+    const queryParams: Record<string, unknown> = { browseType, orderBy };
 
     const execution = await runBugAction(auth, 'list', {
         ...scope,
         page: String(page),
         recPerPage: String(recPerPage),
         pick: input.pick,
+        filter: filter.length > 0 ? filter : undefined,
         params: bodyParams(queryParams),
     });
 
     const data = omitStepsUnlessPicked(execution.data, input.pick);
-    const response: Record<string, unknown> = { data };
-    if (execution.pager) response.pager = execution.pager;
+    const list = Array.isArray(data) ? data : [];
+    const serverTotal = execution.pager?.recTotal;
+    const response: Record<string, unknown> = {
+        data: list,
+        /** 实际返回条数（若使用了 filter，为滤后条数） */
+        count: list.length,
+        /** 本次生效的查询/筛选条件，供 AI 核对 */
+        applied: {
+            scope,
+            page,
+            recPerPage,
+            browseType,
+            orderBy,
+            filter: filter.length > 0 ? filter : null,
+            pick: input.pick ?? null,
+            filterMode: filter.length > 0 ? 'client_page' : 'none',
+            filterGuide: LIST_BUGS_FILTER_GUIDE,
+        },
+    };
+    if (execution.pager) {
+        response.pager = {
+            ...execution.pager,
+            /** 服务端滤前总数；有 filter 时不等于 count */
+            note: filter.length > 0
+                ? 'pager 为服务端滤前分页；滤后条数见 count / data.length'
+                : undefined,
+        };
+    }
 
     const content: CallToolResult['content'] = [{
         type: 'text',
         text: JSON.stringify(response, null, 2),
     }];
 
-    if (execution.pager && execution.pager.recTotal === 0) {
+    if (serverTotal === 0) {
         content.push({
             type: 'text',
-            text: '提示：服务端未返回任何数据（recTotal=0）。可能原因：账号无权限、scope 无效、或参数被拒绝。建议：1) get_current_user 确认账号；2) browseType=assignedtome；3) 检查 projectId/productId/工作区。',
+            text: '提示：服务端未返回任何数据（recTotal=0）。可能原因：账号无权限、scope 无效、或参数被拒绝。建议：1) get_current_user 确认账号；2) 检查 projectId/productId/工作区；3) browseType=all 并用 filter 收窄。',
+        });
+    } else if (filter.length > 0 && list.length === 0) {
+        content.push({
+            type: 'text',
+            text: `提示：服务端本页有数据（recTotal=${serverTotal}），但 filter 后 count=0。filter 只作用于当前页。可检查条件、增大 recPerPage（≤1000）、确认 orderBy=id_desc，或放宽 filter。当前 filter=${JSON.stringify(filter)}`,
         });
     }
 
@@ -249,7 +297,12 @@ const deleteAnn = { readOnlyHint: false, destructiveHint: true, openWorldHint: t
 export function registerBugTools(server: McpServer, auth: AuthProvider): void {
     server.tool(
         'list_bugs',
-        '获取 Bug 列表。可按 projectId/productId/executionId 指定范围，缺省用当前工作区。默认省略 steps 字段。',
+        [
+            '获取 Bug 列表。范围：projectId/productId/executionId 或当前工作区。',
+            '默认 browseType=all、orderBy=id_desc、recPerPage=1000；字段筛选用 filter（客户端本页过滤，语法同 CLI --filter）。',
+            '返回 data、count、applied（含 filter 与 filterGuide）、pager。',
+            '默认省略 steps；需要时用 pick 指定。',
+        ].join(' '),
         listBugsSchema,
         readAnn,
         async (input) => wrapTool(() => handleListBugs(input as Parameters<typeof handleListBugs>[0], auth)),

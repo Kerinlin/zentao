@@ -259,7 +259,7 @@ MCP 仅暴露 **19 个语义化 tool**（Bug 工作流 + 枚举产品/项目/版
 
 | Tool | 说明 |
 | --- | --- |
-| `list_bugs` | Bug 列表（project/product/execution 或工作区；默认省略 steps） |
+| `list_bugs` | Bug 列表（scope 或工作区；默认 browseType=all、orderBy=id_desc、recPerPage=1000；`filter` 客户端本页筛选；默认省略 steps） |
 | `get_bug` | Bug 详情（含 steps） |
 | `create_bug` | 创建 Bug |
 | `update_bug` | 修改 Bug 字段 |

@@ -72,12 +72,18 @@ describe('MCP tool input JSON Schema', () => {
         expect(json.required ?? []).not.toContain('optional');
     });
 
-    test('list_bugs schema has scope + paging fields, no action bag', () => {
+    test('list_bugs schema has scope + paging + filter, no action bag', () => {
         const json = convertShape(listBugsSchema);
         expect(json.properties.projectId).toBeDefined();
         expect(json.properties.productId).toBeDefined();
         expect(json.properties.page).toBeDefined();
         expect(json.properties.browseType).toBeDefined();
+        expect(json.properties.filter).toBeDefined();
+        expect(json.properties.orderBy).toBeDefined();
+        expect(json.properties.recPerPage).toBeDefined();
+        // filter is string[] for AI-readable multi conditions
+        const filterSchema = json.properties.filter as { type?: string; items?: unknown };
+        expect(filterSchema.type).toBe('array');
         expect(json.properties.action).toBeUndefined();
         expect(json.properties.params).toBeUndefined();
     });

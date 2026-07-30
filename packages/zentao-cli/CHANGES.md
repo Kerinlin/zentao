@@ -13,7 +13,7 @@
 ### ✨ 新特性 (Feat)
 
 - **MCP workspace / upload**: 新增 `list_workspaces`、`create_workspace`、`switch_workspace`、`upload_image`、`list_profiles`。
-- **MCP Bug 强 schema**: 一操作一 tool，字段一等平铺；list 默认 page=1、recPerPage=250、browseType=unclosed，默认省略 steps。
+- **MCP Bug 强 schema**: 一操作一 tool，字段一等平铺；list 默认 page=1、recPerPage=1000、browseType=all、orderBy=id_desc；支持 `filter` 客户端筛选并在响应 `applied` 中回显条件；默认省略 steps。
 - **MCP 枚举工具**: `list_products` / `list_projects` / `list_builds` / `list_users`（只读，供 Bug 归属与指派）。
 
 ## 0.2.10

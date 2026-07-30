@@ -74,7 +74,7 @@ zentao mcp                    # 以 stdio 启动 MCP 服务
 
 MCP（`zentao mcp`）**仅暴露语义化 tool（当前 19 个）**，不再全量注册各模块：
 
-- Bug：`list_bugs` / `get_bug` / `create_bug` / `update_bug` / `delete_bug` / `resolve_bug` / `close_bug` / `activate_bug`
+- Bug：`list_bugs`（默认 browseType=all、orderBy=id_desc、recPerPage=1000；`filter` 字段筛选，见 tool schema / 返回 `applied.filterGuide`）/ `get_bug` / `create_bug` / `update_bug` / `delete_bug` / `resolve_bug` / `close_bug` / `activate_bug`
 - 账号：`get_current_user` / `list_profiles` / `switch_user`
 - 工作区：`list_workspaces` / `create_workspace` / `switch_workspace`
 - 上传：`upload_image`
@@ -295,6 +295,48 @@ zentao bug 42                           # 查看具体 Bug
 
 ## 数据处理
 
+### 列表查询原则（测试 / 开发必读）
+
+`--filter` / `--search` / `--sort` / `--limit` / `--pick` 都是 **对本页结果的客户端后处理**，不会自动翻页，也不会改服务端查询。
+
+| # | 原则 | 说明 |
+|---|------|------|
+| 1 | **list 显式指定服务端排序** | 加 `--orderBy=id_desc`（或业务序）。不写时部分实例默认 id 升序，第一页全是历史 `closed`，再 `--filter=status=active` 会得到空数组（假阴性）。`--sort` 只排当前页，不能代替 `--orderBy`。 |
+| 2 | **用 `--filter` 时拉大本页** | 同步加大 `--recPerPage`（API 上限 **1000**）。滤后条数看 `data.length`，不要看 `pager.total`。需要更全时手动 `--page=2`… 翻页再滤（`--all` 目前未实现自动翻页，勿依赖）。 |
+| 3 | **「指派给我」用字段，别盲信 `browseType`** | 项目 scope 上 `browseType` 常无效或与 Web Tab 不一致。推荐：`--browseType=all`（或产品侧 `unclosed`）+ `--filter=assignedTo=<账号>`。`browseType=assignedtome` 仅当产品 scope 实测有数据时再用。关单后 `assignedTo` 常变成字符串 `closed`。 |
+| 4 | **`pager` 是服务端分页，不是滤后统计** | `pager.total` / `page` / `recPerPage` 描述 **滤前** 服务端结果；滤后条数 = 输出列表长度。 |
+
+推荐模板：
+
+```bash
+# 项目 Bug：新→旧 + 大页 + 客户端滤
+zentao bug list --project=<id> --browseType=all --orderBy=id_desc --recPerPage=1000 \
+  --filter='status!=closed' --pick=id,title,status,assignedTo,openedBy
+
+# 未解决（仅 active）
+zentao bug list --project=<id> --browseType=all --orderBy=id_desc --recPerPage=1000 \
+  --filter=status=active
+
+# 指派给某人
+zentao bug list --project=<id> --browseType=all --orderBy=id_desc --recPerPage=1000 \
+  --filter=assignedTo=<账号>
+
+# 我创建
+zentao bug list --project=<id> --browseType=all --orderBy=id_desc --recPerPage=1000 \
+  --filter=openedBy=<账号>
+
+# 产品侧「未关闭」服务端预设（部分实例有效，可先试）
+zentao bug list --product=<id> --browseType=unclosed --orderBy=id_desc --recPerPage=100
+```
+
+状态语义（勿混）：
+
+| 说法 | 建议条件 |
+|------|----------|
+| 未解决 | `status=active`（按团队也可含 `resolved`） |
+| 未关闭 | `status!=closed` 或产品 `browseType=unclosed` |
+| 已关闭 | `status=closed`（注意默认 id 升序时旧单占满首页） |
+
 ### 摘取字段
 
 ```bash
@@ -304,33 +346,37 @@ zentao product --pick=id,name,status
 ### 过滤
 
 ```bash
-zentao bug --product=1 --filter='status:active'
-zentao bug --product=1 --filter='severity<=2,pri<=2'    # AND
-zentao bug --product=1 --filter='status:active' --filter='status:resolved'  # OR
+# 务必配合 orderBy + 足够大的 recPerPage（见上方原则）
+zentao bug --product=1 --orderBy=id_desc --recPerPage=1000 --filter='status:active'
+zentao bug --product=1 --orderBy=id_desc --recPerPage=1000 --filter='severity<=2,pri<=2'    # AND
+zentao bug --product=1 --orderBy=id_desc --recPerPage=1000 --filter='status:active' --filter='status:resolved'  # OR
 ```
 
-支持的运算符：`:` 等于、`!=` 不等于、`>` `<` `>=` `<=`、`~` 包含、`!~` 不包含。
+支持的运算符：`:` / `=` 等于、`!=` 不等于、`>` `<` `>=` `<=`、`~` 包含、`!~` 不包含。
 
 ### 模糊搜索
 
 ```bash
-zentao bug --product=1 --search=登录 --search-fields=title,steps
+zentao bug --product=1 --orderBy=id_desc --recPerPage=1000 --search=登录 --search-fields=title,steps
 ```
 
 ### 排序
 
 ```bash
-zentao bug --product=1 --sort=pri_asc,severity_asc
+# 服务端排序（推荐，影响整表分页）
+zentao bug --product=1 --orderBy=id_desc --recPerPage=100
+
+# 客户端排序（仅当前页）
+zentao bug --product=1 --orderBy=id_desc --recPerPage=100 --sort=pri_asc,severity_asc
 ```
 
 ### 分页
 
 ```bash
-zentao bug --product=1 --page=1 --recPerPage=50
-zentao bug --product=1 --all            # 获取全部
-zentao bug --product=1 --limit=10       # 只取前 10 条
+zentao bug --product=1 --orderBy=id_desc --page=1 --recPerPage=50
+zentao bug --product=1 --orderBy=id_desc --recPerPage=1000   # 单页尽量多取，再 filter
+zentao bug --product=1 --orderBy=id_desc --recPerPage=100 --limit=10  # 本页内再截断前 10 条
 ```
-
 ## 常用操作示例
 
 ### 查看进行中的项目和执行
@@ -386,7 +432,9 @@ zentao help              # 查看所有命令
 |---------|---------|
 | 所有产品/项目/项目集 | `zentao product` / `zentao project` / `zentao program` |
 | 进行中的项目 | `zentao project --filter='status:doing'` |
-| 某产品的 Bug | `zentao bug --product=<id>` |
+| 某产品的 Bug | `zentao bug --product=<id> --orderBy=id_desc --recPerPage=100` |
+| 某项目的 Bug | `zentao bug --project=<id> --browseType=all --orderBy=id_desc --recPerPage=1000` |
+| 未关闭 / 指派给我 / 我创建 | 见「列表查询原则」：`--orderBy=id_desc --recPerPage=1000 --filter=...` |
 | 某执行的任务 | `zentao task --execution=<id>` |
 | 创建/新增 Bug | `zentao bug create ...`（有工作区可省略 `--product`） |
 | 用 Markdown 写复现步骤 | `zentao bug create ... --steps-file=./steps.md`（先 `zentao upload` 图片） |
@@ -441,6 +489,10 @@ zentao help              # 查看所有命令
 
 - 不确定模块参数时，先执行 `zentao <module> help` 查看帮助，不确定操作参数时，先执行 `zentao <module> <action> help` 查看帮助
 - help 里字段名可能是 `productID`，传参可用 `--product` 或 `--productID`（≥1.3.1 等价并双写）
-- `browseType` 常用值：`all`（全部）、`doing`（进行中）、`closed`（已关闭）
+- **Bug 列表**：`--filter` 是客户端本页过滤；必带 `--orderBy=id_desc` 与足够大的 `--recPerPage`（见「列表查询原则」）
+- `browseType` 是服务端命名视图，**枚举随模块/入口而变**，不是通用字段查询：
+  - Bug：文档常见 `all` / `unclosed` / `assignedtome` / `openedbyme`；Web 项目 Bug 页可能只有 `all` / `unresolved`
+  - 项目 scope 上部分 IPD 实例会忽略 `browseType`；以实测为准，精确条件用 `--filter`
+  - 产品/项目自身列表才用 `doing` / `closed` 等，不要套到 Bug 上
 - 多账号切换：`zentao profile` 查看和切换账号；退出用 `zentao logout`
 - 技能文件随 npm 包分发在 `skills/`；更新 CLI 后若 Agent 目录仍是旧 skill，再跑一次 `zentao add-skill`
