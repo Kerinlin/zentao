@@ -159,6 +159,24 @@ function installMcp(agent: string, silent: boolean): void {
     }
 }
 
+/* ── Programmatic entry (install wizard) ── */
+
+/** 供 `zentao install` 等同进程调用：校验登录后写入 MCP 配置 */
+export async function runAddMcp(options: { agent?: string; silent?: boolean } = {}): Promise<void> {
+    const silent = !!options.silent;
+    const profile = requireLoggedInProfile();
+    const agents = options.agent ? resolveAgents(options.agent) : await promptAgentSelection();
+
+    if (!silent) {
+        console.log(`使用当前登录: ${profile.account}@${profile.server}`);
+        console.log('MCP 将通过本地 zentao 配置鉴权（无需在 Agent 配置中写入密码）');
+    }
+
+    for (const a of agents) {
+        installMcp(a, silent);
+    }
+}
+
 /* ── Command Registration ── */
 
 /** 注册 `zentao add-mcp`：配置禅道 MCP 服务到 AI Agent */
@@ -169,20 +187,8 @@ export function registerAddMcpCommand(program: Command): void {
         .argument('[agent]', `目标 Agent (${MCP_AGENT_NAMES.join('|')}|all)`)
         .action(async (agent?: string) => {
             const globalOpts = program.opts() as GlobalOptions;
-            const silent = !!globalOpts.silent;
-
             try {
-                const profile = requireLoggedInProfile();
-                const agents = agent ? resolveAgents(agent) : await promptAgentSelection();
-
-                if (!silent) {
-                    console.log(`使用当前登录: ${profile.account}@${profile.server}`);
-                    console.log('MCP 将通过本地 zentao 配置鉴权（无需在 Agent 配置中写入密码）');
-                }
-
-                for (const a of agents) {
-                    installMcp(a, silent);
-                }
+                await runAddMcp({ agent, silent: !!globalOpts.silent });
             } catch (error) {
                 console.error(String((error as Error).message ?? error));
                 process.exit(1);

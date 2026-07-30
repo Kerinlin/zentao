@@ -7,6 +7,7 @@ import type { GlobalOptions } from '../types/index.js';
 import { PACKAGE_NAME, fetchLatestVersion } from '../utils/update-notifier.js';
 import { getCurrentProfile } from '../config/store.js';
 import { runAddSkill } from './add-skill.js';
+import { runAddMcp } from './add-mcp.js';
 
 const NODE_MIN_MAJOR = 18;
 const NODE_LTS_MAJOR = 22;
@@ -169,7 +170,7 @@ function printNodeInstallGuidance(rl: Interface): void {
 export function registerInstallCommand(program: Command): void {
     program
         .command('install')
-        .description('一键安装或配置 zentao-cli（检测环境 → 安装 → 登录 → 安装技能）')
+        .description('一键安装或配置 zentao-cli（检测环境 → 安装 → 登录 → 选择 skill/MCP）')
         .option('-y, --yes', '跳过所有交互确认，使用默认值')
         .action(async (opts: { yes?: boolean }) => {
             const globalOpts = program.opts() as GlobalOptions;
@@ -265,43 +266,105 @@ export function registerInstallCommand(program: Command): void {
         });
 }
 
-/** 安装后的「登录 + 技能安装」流程 */
+/** AI 接入方式：skill / mcp / 两者 / 跳过 */
+type AgentIntegrationChoice = 'skill' | 'mcp' | 'both' | 'skip';
+
+/** 交互选择 skill 或 MCP（编号） */
+async function askAgentIntegration(rl: Interface): Promise<AgentIntegrationChoice> {
+    console.log('\n请选择要配置的 AI 接入方式:');
+    console.log('  1) CLI 技能  (zentao add-skill)  — Agent 通过 skill 调 CLI');
+    console.log('  2) MCP 服务  (zentao add-mcp)    — Agent 通过 MCP tools 调禅道（需已登录）');
+    console.log('  3) 两者都装');
+    console.log('  4) 跳过');
+    const answer = await ask(rl, '请输入编号 [1]: ');
+    switch (answer) {
+        case '2':
+            return 'mcp';
+        case '3':
+            return 'both';
+        case '4':
+        case 'n':
+        case 'N':
+            return 'skip';
+        case '1':
+        case '':
+        default:
+            // 非法输入时默认 skill，与「编号默认 1」一致
+            if (answer !== '' && answer !== '1') {
+                console.log(`未识别「${answer}」，按 1) CLI 技能 处理。`);
+            }
+            return 'skill';
+    }
+}
+
+/** 安装后的「登录 → 选择 skill/MCP」流程 */
 async function runPostInstallFlow(rl: Interface, interactive: boolean): Promise<void> {
-    // 非交互模式（curl|sh 管道）：跳过需要 TTY 输入的 login/add-skill
+    // 非交互模式（curl|sh 管道）：跳过需要 TTY 输入的 login/add-skill/add-mcp
     if (!interactive) {
         console.log('\n安装完成。请在终端中运行以下命令完成配置:');
         console.log('  zentao login       # 登录禅道服务');
-        console.log('  zentao add-skill   # 安装 AI Agent 技能\n');
+        console.log('  zentao add-skill   # 安装 AI Agent 技能');
+        console.log('  zentao add-mcp     # 或配置 MCP 服务（需已登录）\n');
         return;
     }
 
-    // 步骤 5/6：先用 readline 收齐 Y/N，再释放 stdin 给 login / 多选
+    // ── 1) 先完成登录（再谈 skill/MCP）────────────────────────────
     const existing = getCurrentProfile();
     let doLogin: boolean;
     if (existing) {
-        console.log(`\n当前已登录: ${existing.account}@${existing.server}`);
-        doLogin = await confirm(rl, '是否重新配置登录信息？', false);
+        console.log(`\n检测到本地登录配置（非安装默认值，来自本机 ~/.config/zentao）:`);
+        console.log(`  ${existing.account}@${existing.server}`);
+        doLogin = await confirm(rl, '是否重新登录 / 切换禅道账号？', false);
     } else {
         doLogin = await confirm(rl, '\n是否立即登录禅道服务？', true);
     }
-    const doSkill = await confirm(rl, '\n是否安装 zentao CLI 技能到 AI Agent？', true);
-
-    // 必须关闭 readline：否则子进程/raw mode 多选仍占着旧 stdin 监听
-    safeCloseRl(rl);
-    await drainStdin();
 
     if (doLogin) {
-        // 与当前进程同一入口，避免 PATH 上的全局旧版 zentao
+        // 关闭 readline，把 stdin 交给 login 交互
+        safeCloseRl(rl);
+        await drainStdin();
         const status = runZentaoSubcommand(['login']);
         if (status !== 0) {
             console.error('登录失败，请稍后使用 `zentao login` 重试。');
             process.exit(1);
         }
+        // login 结束后重新打开 readline，供后续选择 skill/MCP
+        const rl2 = createInterface({
+            input: process.stdin,
+            output: process.stdout,
+            terminal: process.stdin.isTTY ?? false,
+        });
+        try {
+            await chooseAndRunAgentIntegration(rl2);
+        } finally {
+            safeCloseRl(rl2);
+        }
+        printInstallDone();
+        return;
     }
 
-    if (doSkill) {
+    // 未重新登录：继续用当前 profile（若无 profile，MCP 会失败并提示先 login）
+    await chooseAndRunAgentIntegration(rl);
+    safeCloseRl(rl);
+    printInstallDone();
+}
+
+/** 选择并执行 add-skill / add-mcp（调用前/后自行管理 readline 生命周期） */
+async function chooseAndRunAgentIntegration(rl: Interface): Promise<void> {
+    const choice = await askAgentIntegration(rl);
+
+    // multi-select / 子流程需要独占 stdin
+    safeCloseRl(rl);
+    await drainStdin();
+
+    if (choice === 'skip') {
+        console.log('已跳过 AI Agent 配置。稍后可运行: zentao add-skill 或 zentao add-mcp');
+        return;
+    }
+
+    if (choice === 'skill' || choice === 'both') {
         try {
-            // 同进程调用，保证用的是本包 multi-select，而不是 PATH 旧版
+            console.log('\n── 安装 CLI 技能 (add-skill) ──');
             await runAddSkill();
         } catch (error) {
             console.error(String((error as Error).message ?? error));
@@ -310,12 +373,30 @@ async function runPostInstallFlow(rl: Interface, interactive: boolean): Promise<
         }
     }
 
-    // 步骤 7：总结
+    if (choice === 'mcp' || choice === 'both') {
+        try {
+            console.log('\n── 配置 MCP 服务 (add-mcp) ──');
+            const profile = getCurrentProfile();
+            if (!profile?.token) {
+                console.error('配置 MCP 需要先登录。请运行 `zentao login` 后再执行 `zentao add-mcp`。');
+                process.exit(1);
+            }
+            await runAddMcp();
+        } catch (error) {
+            console.error(String((error as Error).message ?? error));
+            console.error('MCP 配置失败，请稍后使用 `zentao add-mcp` 重试。');
+            process.exit(1);
+        }
+    }
+}
+
+function printInstallDone(): void {
     console.log('\n\x1b[32m✓ 配置完成！\x1b[0m\n');
     console.log('快速上手:');
     console.log('  zentao                  # 查看可用命令');
     console.log('  zentao login            # 重新登录或切换账号');
-    console.log('  zentao product          # 查看禅道产品');
+    console.log('  zentao add-skill        # 安装 CLI 技能到 AI Agent');
+    console.log('  zentao add-mcp          # 配置 MCP 服务到 AI Agent');
     console.log('  zentao help             # 查看帮助');
     console.log('');
 }

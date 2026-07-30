@@ -5,12 +5,14 @@
 ### ✨ 新特性 (Feat)
 
 - **uninstall 一键卸载**: `zentao uninstall [-y] [--purge]` 全扫已知 Agent 清理 skill（`zentao-cli`/`zentao-tour`）、MCP 键（`zentao-cli`/`zentao`）、补全脚本，最后 `npm uninstall -g @kerin/zentao-cli`；默认保留本地配置，`--purge` 才删当前生效配置文件。
+- **install 接入方式选择**: 登录完成后再选 CLI 技能 / MCP / 两者 / 跳过，并调用 `add-skill` 或 `add-mcp`。
 
 ### 🐛 修复 (Fix)
 
 - **add-mcp Claude Code 路径**: 写入 `~/.claude.json` 顶层 `mcpServers`（不再误写 `~/.claude/settings.json`）。
 - **add-mcp 配置形态**: 统一为 `command: zentao` + `args: ["mcp"]`；不再嵌入 `ZENTAO_*` 密码 env，鉴权复用 `zentao login` 本地 profile。
 - **add-mcp 交互多选**: 与 `add-skill` 一致，使用 ↑↓ / 空格 / a / 回车多选 Agent（不再编号单选）。
+- **install 流程顺序**: 先完成登录再配置 Agent；标明本地 profile 来源，避免误以为默认 admin@example。
 
 ### 💥 Breaking
 
