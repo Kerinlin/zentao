@@ -72,10 +72,17 @@ $ zentao add-skill
 
 ## MCP 工具（精简）
 
+```bash
+zentao login          # 必须先登录
+zentao add-mcp        # 写入各 Agent 的 MCP 配置（command: zentao / args: ["mcp"]）
+# Claude Code 全局：~/.claude.json → mcpServers.zentao-cli
+```
+
+鉴权走本地 profile，范围走 workspace；Agent 配置里**不写** `ZENTAO_PASSWORD`。
+
 通过 `zentao add-mcp` 或 `zentao mcp` 接入时，服务只暴露 **19 个** tool（Bug 全套、账号/工作区/上传，以及产品/项目/版本/用户枚举）。
 
 不再提供按模块全量注册的 `zentao_bug`、`zentao_task` 等 tool。其它模块请用 CLI 技能。详见 [README MCP 段](../README.md#通过-mcp-服务使用)。
-
 ## 使用示例
 
 安装登录完成之后，可以在对应 Agent 工具中使用禅道 CLI 技能，下面为一些使用示例：

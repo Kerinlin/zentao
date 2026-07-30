@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### ✨ 新特性 (Feat)
+
+- **uninstall 一键卸载**: `zentao uninstall [-y] [--purge]` 全扫已知 Agent 清理 skill（`zentao-cli`/`zentao-tour`）、MCP 键（`zentao-cli`/`zentao`）、补全脚本，最后 `npm uninstall -g @kerin/zentao-cli`；默认保留本地配置，`--purge` 才删当前生效配置文件。
+
+### 🐛 修复 (Fix)
+
+- **add-mcp Claude Code 路径**: 写入 `~/.claude.json` 顶层 `mcpServers`（不再误写 `~/.claude/settings.json`）。
+- **add-mcp 配置形态**: 统一为 `command: zentao` + `args: ["mcp"]`；不再嵌入 `ZENTAO_*` 密码 env，鉴权复用 `zentao login` 本地 profile。
+- **add-mcp 交互多选**: 与 `add-skill` 一致，使用 ↑↓ / 空格 / a / 回车多选 Agent（不再编号单选）。
+
 ### 💥 Breaking
 
 - **MCP 精简为语义化 tool（Bug 工作流，当前 19 个）**: 删除按模块全量自动注册（`zentao_bug` / `zentao_task` / … 及 `action`+`params` 袋）。改为固定工具：Bug 列表/详情/创建/修改/删除/解决/关闭/激活、当前用户、账号列表、切换用户、工作区列表/创建/切换、图片上传。旧 `zentao_profile` / `zentao_switch_profile` 分别更名为 `get_current_user` / `switch_user`。

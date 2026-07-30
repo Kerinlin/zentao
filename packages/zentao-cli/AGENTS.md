@@ -48,8 +48,10 @@ src/
 │   ├── autocomplete.ts      # bash/zsh/fish completion scripts
 │   ├── add-skill.ts         # Install skills into AI agents
 │   ├── add-mcp.ts           # Write MCP config into AI agents
+│   ├── uninstall.ts         # Remove skill/MCP/completion/(optional config)/npm CLI
 │   ├── mcp.ts / upgrade.ts / upload.ts / ...
 │   └── ...
+├── agent-install/           # Shared Agent skill/MCP target paths + JSON helpers
 ├── api/index.ts             # SDK re-export + createClient
 ├── modules/                 # helper, args, executor
 ├── auth/                    # Login flow & credential prompting

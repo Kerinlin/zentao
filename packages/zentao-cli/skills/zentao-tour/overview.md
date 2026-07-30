@@ -71,28 +71,33 @@ zentao login -s https://zentao.example.com -u <账号> -p <密码>
 
 ### 方式二：配置为 MCP 服务
 
-若用户使用的智能工具（如 Cursor、Claude Desktop 等）支持 MCP（Model Context Protocol），可将 zentao-cli 注册为 MCP 服务，直接在对话中调用禅道能力。通用配置思路：
+若用户使用的智能工具（如 Cursor、Claude Desktop、Claude Code 等）支持 MCP，可把 zentao-cli 注册为 MCP 服务。**先 login，再 add-mcp**；配置里只写启动命令，不写密码：
+
+```bash
+zentao login
+zentao add-mcp          # 交互选 Agent
+# 或 zentao add-mcp claude-code / cursor / ...
+```
+
+手动配置示例：
 
 ```json
 {
   "mcpServers": {
-    "zentao": {
-      "command": "npx",
-      "args": ["-y", "@kerin/zentao-cli", "mcp"],
-      "env": {
-        "ZENTAO_URL": "https://zentao.example.com",
-        "ZENTAO_ACCOUNT": "<账号>",
-        "ZENTAO_TOKEN": "<token>"
-      }
+    "zentao-cli": {
+      "command": "zentao",
+      "args": ["mcp"]
     }
   }
 }
 ```
 
-具体 MCP 启动方式与参数以 [包 README](https://github.com/Kerinlin/zentao/blob/main/packages/zentao-cli/README.md) 为准；不同智能工具的配置文件位置不同（Cursor 的 `~/.cursor/mcp.json`、Claude Desktop 的 `claude_desktop_config.json` 等）。
+- 鉴权：复用 `zentao login` 的本地 profile  
+- 范围：当前 workspace  
+- Claude Code 全局路径：`~/.claude.json` → `mcpServers`  
+- 具体说明以 [包 README](https://github.com/Kerinlin/zentao/blob/main/packages/zentao-cli/README.md) 为准  
 
 MCP 只提供精简 tool（Bug 工作流、账号/工作区、图片上传、产品/项目/版本/用户枚举），不是全量禅道 API。其它模块请用 CLI 技能。
-
 ## 就绪自检
 
 正式开始前，顺手跑一下这两条，把账号和连通性确认掉：

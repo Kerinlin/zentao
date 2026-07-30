@@ -10,11 +10,12 @@
 * ✅ 支持对数据进行摘取、过滤、排序等处理，并自动将 HTML 转换为 Markdown
 * ✅ 对 AI Agents 友好，帮助信息完善，支持输出 Markdown
 * ✅ 支持以 AI 技能的方式使用，`zentao add-skill` 一键安装到 AI Agent
-* ✅ 支持 MCP 服务，`npx @kerin/zentao-cli mcp` 启动；`zentao add-mcp` 一键写入 Agent 配置
+* ✅ 支持 MCP 服务，`zentao mcp` 启动；`zentao add-mcp` 一键写入 Agent 配置（复用本地 login 凭证）
 * ✅ 工作区管理：`ls` / `set`（ID 或名称切换、就地改范围）/ `add`（按对象建区）/ `rm`；命令自动注入范围并提示；可选 `autoSetWorkspace`
 * ✅ Shell 自动补全脚本：`zentao autocomplete bash|zsh|fish`
 * ✅ 富文本图床上传：`zentao upload <image>`
 * ✅ `zentao upgrade` 检查新版本并自动升级 CLI
+* ✅ `zentao uninstall` 一键清理 Agent skill/MCP、补全脚本，并 npm 全局卸载 CLI（`--purge` 可删本地配置）
 * ✅ 使用 Bun + TypeScript 开发，具备类型安全与测试覆盖
 
 待实现 / 待完善特性：
@@ -163,6 +164,8 @@ zentao bug help
 
 更多功能（环境变量、账户切换、批量操作、管道输入、分页控制等）请参考 [CLI 核心功能详解](docs/cli-usage.md)。
 
+**按角色上手（小白向）**：[开发 & 测试使用指南](docs/guide-dev-and-test.md) — 内网一键安装后二选一：`zentao add-skill`（技能）或 `zentao add-mcp`（MCP，日常提单修单推荐）。
+
 ## 在 AI Agents 中使用
 
 ### 通过 Zentao CLI 技能使用
@@ -205,29 +208,21 @@ $ pnpm install -g @kerin/zentao-cli && zentao login && zentao add-skill all
 
 ### 通过 MCP 服务使用
 
-Zentao CLI 支持一键配置 MCP 服务，只需要执行 `zentao add-mcp` 命令，然后按照提示输入禅道 URL、用户名和密码即可。
+先 `zentao login` 登录，再执行 `zentao add-mcp` 一键写入 Agent 配置。MCP 进程复用本地 profile / 工作区，**不在 Agent 配置里写密码**。
 
 ```bash
-# 一键配置 MCP 服务
+# 需已登录
+$ zentao login
 $ zentao add-mcp
+# 或指定 Agent，例如 Claude Code → 写入 ~/.claude.json
+$ zentao add-mcp claude-code
 
-请输入禅道 URL: https://zentao.example.com
-请输入用户名: admin
-请输入密码: 123456
-
-请选择要配置的 AI Agent:
-   1) Cursor
-   2) Claude Desktop
-   3) Claude Code
-   4) Windsurf
-   5) Cline
-   6) Trae
-   7) VS Code
-   8) Cherry Studio
-   9) OpenCode
-  10) Codex
-  11) 全部配置
-请输入编号 (1-11): 7
+请选择要配置的 AI Agent（可多选）:
+❯ [x] Claude Code
+  [ ] Cursor
+  [ ] VS Code
+  ...
+# ↑↓ 移动，空格勾选，a 全选，回车确认
 ```
 
 如果还未安装 zentao-cli，可以通过下面的命令，一键安装、登录和配置 MCP 服务：
@@ -237,24 +232,21 @@ $ zentao add-mcp
 $ pnpm install -g @kerin/zentao-cli && zentao login && zentao add-mcp
 ```
 
-统一支持通过 `npx -y @kerin/zentao-cli mcp` 手动启动 MCP 服务，然后通过 MCP 客户端访问和操作禅道数据。目前各大 Agents 工具无需提前安装 zentao-cli 本身，只需要在 MCP 服务配置中增加如下配置即可：
+也可手动在 Agent 的 MCP 配置中加入（需本机已安装 `zentao` 且已 login）：
 
 ```json
 {
   "mcpServers": {
     "zentao-cli": {
-      "command": "npx",
-      "args": ["-y", "@kerin/zentao-cli", "mcp"],
-      "env": {
-        "ZENTAO_URL": "https://zentao.example.com",
-        "ZENTAO_ACCOUNT": "admin",
-        "ZENTAO_PASSWORD": "123456"
-      }
+      "command": "zentao",
+      "args": ["mcp"]
     }
   }
 }
 ```
 
+> Claude Code 全局 MCP 写在 `~/.claude.json` 顶层 `mcpServers`（不是 `~/.claude/settings.json`）。  
+> 鉴权：`zentao login` 缓存的 token；范围：当前 workspace（product/project/execution）。环境变量 `ZENTAO_*` 仅为无 profile 时的后备，日常 MCP 不需要。
 MCP 仅暴露 **19 个语义化 tool**（Bug 工作流 + 枚举产品/项目/版本/用户）（不再按模块全量注册 `zentao_bug` / `zentao_task` 等）：
 
 | Tool | 说明 |
@@ -278,6 +270,22 @@ MCP 仅暴露 **19 个语义化 tool**（Bug 工作流 + 枚举产品/项目/版
 | `list_users` | 用户列表（assignedTo 账号） |
 
 **迁移（硬切）**：旧 `zentao_bug` + `action`、`zentao_profile`、`zentao_switch_profile` 及全部其它模块 tool 已移除；请改用上表。其它模块操作请继续使用 CLI 或 skill。
+
+### 卸载
+
+```bash
+# 预览将清理的 skill / MCP / 补全，并卸载 npm 全局包（默认保留 ~/.config/zentao 登录配置）
+zentao uninstall
+
+# 跳过确认
+zentao uninstall -y
+
+# 同时删除当前生效的本地配置文件（含 token / 工作区）
+zentao uninstall -y --purge
+```
+
+顺序：skill → MCP 键（`zentao-cli` / `zentao`）→ 补全脚本 →（可选 purge）→ `npm uninstall -g @kerin/zentao-cli`。  
+非交互环境必须带 `-y`，否则只打印计划并以退出码 2 退出。
 
 ## 文档
 

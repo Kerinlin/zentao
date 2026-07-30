@@ -1,31 +1,15 @@
 import { Command } from 'commander';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { GlobalOptions } from '../types/index.js';
 import { multiSelect } from '../utils/multi-select.js';
-
-interface AgentTarget {
-    label: string;
-    dir: string;
-}
-
-const SKILL_NAMES = ['zentao-cli', 'zentao-tour'] as const;
-
-const AGENT_TARGETS: Record<string, AgentTarget> = {
-    'claude-code': { label: 'Claude Code', dir: join(homedir(), '.claude', 'skills') },
-    'cursor':      { label: 'Cursor',      dir: join(homedir(), '.cursor', 'skills') },
-    'cherry-studio': { label: 'Cherry Studio', dir: join(homedir(), '.cherrystudio', 'skills') },
-    'codex':       { label: 'Codex',       dir: join(homedir(), '.agents', 'skills') },
-    'opencode':    { label: 'OpenCode',    dir: join(homedir(), '.config', 'opencode', 'skills') },
-    'vscode':      { label: 'VS Code',     dir: join(homedir(), '.copilot', 'skills') },
-    'antigravity': { label: 'Antigravity', dir: join(homedir(), '.gemini', 'antigravity', 'skills') },
-    'gemini':      { label: 'Gemini',      dir: join(homedir(), '.gemini', 'skills') },
-    'workbuddy':   { label: 'WorkBuddy',   dir: join(homedir(), '.workbuddy', 'skills') },
-};
-
-const AGENT_NAMES = Object.keys(AGENT_TARGETS);
+import {
+    SKILL_AGENT_NAMES,
+    SKILL_AGENT_TARGETS,
+    SKILL_NAMES,
+    tildeDisplay,
+} from '../agent-install/targets.js';
 
 function resolveSkillSource(skillName: string): string {
     const thisFile = fileURLToPath(import.meta.url);
@@ -47,24 +31,19 @@ function resolveSkillSource(skillName: string): string {
     );
 }
 
-function tildeDisplay(absPath: string): string {
-    const home = homedir();
-    return absPath.startsWith(home) ? absPath.replace(home, '~') : absPath;
-}
-
 async function promptAgentSelection(): Promise<string[]> {
     if (!process.stdin.isTTY || !process.stderr.isTTY) {
         throw new Error(
-            `未指定 agent，请在交互终端中选择，或显式传入: ${AGENT_NAMES.join('|')}|all`,
+            `未指定 agent，请在交互终端中选择，或显式传入: ${SKILL_AGENT_NAMES.join('|')}|all`,
         );
     }
 
     try {
         return await multiSelect({
             title: '请选择要安装的 AI Agent（可多选）:',
-            items: AGENT_NAMES.map((name) => ({
+            items: SKILL_AGENT_NAMES.map((name) => ({
                 value: name,
-                label: AGENT_TARGETS[name].label,
+                label: SKILL_AGENT_TARGETS[name].label,
             })),
             min: 1,
         });
@@ -72,7 +51,7 @@ async function promptAgentSelection(): Promise<string[]> {
         const msg = String((error as Error).message ?? error);
         if (msg.includes('不支持交互多选') || msg.includes('当前终端')) {
             throw new Error(
-                `未指定 agent，请在交互终端中选择，或显式传入: ${AGENT_NAMES.join('|')}|all`,
+                `未指定 agent，请在交互终端中选择，或显式传入: ${SKILL_AGENT_NAMES.join('|')}|all`,
             );
         }
         throw error;
@@ -81,10 +60,10 @@ async function promptAgentSelection(): Promise<string[]> {
 
 function resolveAgents(agent: string): string[] {
     const normalized = agent.toLowerCase();
-    if (normalized === 'all') return [...AGENT_NAMES];
-    if (AGENT_TARGETS[normalized]) return [normalized];
+    if (normalized === 'all') return [...SKILL_AGENT_NAMES];
+    if (SKILL_AGENT_TARGETS[normalized]) return [normalized];
     throw new Error(
-        `不支持的 agent: ${agent}\n可用选项: ${AGENT_NAMES.join('、')}、all`,
+        `不支持的 agent: ${agent}\n可用选项: ${SKILL_AGENT_NAMES.join('、')}、all`,
     );
 }
 
@@ -102,7 +81,7 @@ function copySkillDir(srcDir: string, destDir: string): void {
 }
 
 function installSkill(agent: string, skillName: string, silent: boolean): void {
-    const target = AGENT_TARGETS[agent];
+    const target = SKILL_AGENT_TARGETS[agent];
     const sourcePath = resolveSkillSource(skillName);
     const destDir = join(target.dir, skillName);
 
@@ -133,7 +112,7 @@ export function registerAddSkillCommand(program: Command): void {
     program
         .command('add-skill')
         .description('安装禅道 CLI 技能到 AI Agent')
-        .argument('[agent]', `目标 Agent (${AGENT_NAMES.join('|')}|all)`)
+        .argument('[agent]', `目标 Agent (${SKILL_AGENT_NAMES.join('|')}|all)`)
         .action(async (agent?: string) => {
             const globalOpts = program.opts() as GlobalOptions;
             try {

@@ -7,7 +7,7 @@ import { getModuleNames } from '../modules/index.js';
 
 const ROOT_COMMANDS = [
     'login', 'logout', 'profile', 'config', 'workspace', 'version', 'upgrade',
-    'ls', 'get', 'create', 'update', 'delete', 'do', 'autocomplete', 'add-skill', 'add-mcp',
+    'ls', 'get', 'create', 'update', 'delete', 'do', 'autocomplete', 'add-skill', 'add-mcp', 'uninstall',
 ];
 
 const CONFIG_SUBCOMMANDS = ['get', 'set'];
