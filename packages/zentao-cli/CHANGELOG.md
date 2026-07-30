@@ -1,5 +1,16 @@
 # @kerin/zentao-cli
 
+## 1.3.5
+
+### Patch Changes
+
+- a2ddfa9: docs: 更新开发测试指南以匹配 install 与 list_bugs
+
+  fix: 调整 install 流程为先登录再选 skill/MCP
+
+- Updated dependencies [a2ddfa9]
+  - @kerin/zentao-api@1.3.5
+
 ## 1.3.4
 
 ### Patch Changes
