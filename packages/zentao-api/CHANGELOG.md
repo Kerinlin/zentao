@@ -1,5 +1,11 @@
 # @kerin/zentao-api
 
+## 1.3.4
+
+### Patch Changes
+
+- 3eb50b0: feat: 新增 uninstall 并重构 add-mcp 鉴权与 Agent 安装
+
 ## 1.3.3
 
 ### Patch Changes
