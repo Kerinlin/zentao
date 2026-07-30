@@ -1,5 +1,11 @@
 # @kerin/zentao-api
 
+## 1.3.2
+
+### Patch Changes
+
+- 9081c85: fix: 修正 autoFill 测试以适配范围字段双写
+
 ## 1.3.1
 
 ### Patch Changes

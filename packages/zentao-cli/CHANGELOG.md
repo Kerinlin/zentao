@@ -1,5 +1,13 @@
 # @kerin/zentao-cli
 
+## 1.3.2
+
+### Patch Changes
+
+- 9081c85: feat: 将 MCP 精简为 Bug 工作流语义化 tools
+- Updated dependencies [9081c85]
+  - @kerin/zentao-api@1.3.2
+
 ## 1.3.1
 
 ### Patch Changes
