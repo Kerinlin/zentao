@@ -61,7 +61,7 @@ zentao product create --name="<名称>" --code="<代号>" --desc="<简介>"
 等用户点头了，再写进禅道——**一次写一条**，不要攒一堆批量写：
 
 ```bash
-zentao story create --productID=<产品ID> --title="<标题>" --pri=<1-4> --spec="<一段话描述>"
+zentao story create --product=<产品ID> --title="<标题>" --pri=<1-4> --spec="<一段话描述>"
 ```
 
 优先级 `pri` 可以根据用户自己的重视程度直接推荐：核心功能给 1 或 2，体验优化给 3，附加能力给 4。不要问用户"你想要什么优先级"，而是给个建议让他点头或反对。
@@ -91,7 +91,7 @@ zentao story create --productID=<产品ID> --title="<标题>" --pri=<1-4> --spec
 确认后：
 
 ```bash
-zentao productplan create --productID=<产品ID> --title="<计划名>" --begin=<YYYY-MM-DD> --end=<YYYY-MM-DD>
+zentao productplan create --product=<产品ID> --title="<计划名>" --begin=<YYYY-MM-DD> --end=<YYYY-MM-DD>
 ```
 
 然后把用户刚刚挑出来的那几条需求挂进去，一条一条来，每条前都顺口说一声要挂哪个：
@@ -103,7 +103,7 @@ zentao story update <storyID> --title="<标题必填>" --plan=<计划ID>
 全部挂完后，顺手列一张表给用户看成果（**不要**加"小结"这种字眼）：
 
 ```bash
-zentao story --productID=<产品ID> --pick=id,title,pri,plan
+zentao story --product=<产品ID> --pick=id,title,pri,plan
 ```
 
 像朋友一样指着说："喏，你看这几条都绑在《MVP 首发》上了——从一个空白的点子到这张表，其实你已经走完了产品经理最核心的一条线：**产品 → 需求 → 计划**。研发同事打开禅道就能按这个打工。"

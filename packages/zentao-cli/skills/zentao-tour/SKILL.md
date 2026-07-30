@@ -6,7 +6,7 @@ metadata:
   author: Sun Hao <sunhao@chandao.com>
   repository: https://github.com/Kerinlin/zentao.git
   keywords: [zentao, 禅道, tour, onboarding, tutorial, 体验, 上手]
-  version: 1.1.0
+  version: 1.3.1
 ---
 
 # 禅道 Tour

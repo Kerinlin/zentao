@@ -255,6 +255,30 @@ $ pnpm install -g @kerin/zentao-cli && zentao login && zentao add-mcp
 }
 ```
 
+MCP 仅暴露 **19 个语义化 tool**（Bug 工作流 + 枚举产品/项目/版本/用户）（不再按模块全量注册 `zentao_bug` / `zentao_task` 等）：
+
+| Tool | 说明 |
+| --- | --- |
+| `list_bugs` | Bug 列表（project/product/execution 或工作区；默认省略 steps） |
+| `get_bug` | Bug 详情（含 steps） |
+| `create_bug` | 创建 Bug |
+| `update_bug` | 修改 Bug 字段 |
+| `delete_bug` | 删除 Bug |
+| `resolve_bug` / `close_bug` / `activate_bug` | 状态流转 |
+| `get_current_user` | 当前账号 |
+| `list_profiles` | 本地已登录账号（无密码） |
+| `switch_user` | 切换账号 |
+| `list_workspaces` | 工作区列表 |
+| `create_workspace` | 按产品/项目/执行建区（对齐 `workspace add`，并设为当前） |
+| `switch_workspace` | 切换工作区（ID 或名称） |
+| `upload_image` | 上传本地图片到图床 |
+| `list_products` | 产品列表（拿 productId） |
+| `list_projects` | 项目列表（拿 projectId） |
+| `list_builds` | 版本列表（openedBuild / resolvedBuild） |
+| `list_users` | 用户列表（assignedTo 账号） |
+
+**迁移（硬切）**：旧 `zentao_bug` + `action`、`zentao_profile`、`zentao_switch_profile` 及全部其它模块 tool 已移除；请改用上表。其它模块操作请继续使用 CLI 或 skill。
+
 ## 文档
 
 | 文档 | 说明 |

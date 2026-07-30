@@ -23,7 +23,7 @@ packages/zentao-cli/
 │   ├── modules/            # helper / args / executor（SDK 封装）
 │   ├── auth/               # 认证与交互登录
 │   ├── config/             # configstore + workspace
-│   ├── mcp/                # MCP server
+│   ├── mcp/                # MCP server（15 语义化 tools：register + tools/*）
 │   ├── utils/              # 格式化、渲染、HTML→MD、升级检测等
 │   ├── types/              # CLI 类型 + 重导 SDK 类型
 │   ├── errors.ts           # CLI ZentaoError

@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ZentaoClient } from '../api/index.js';
 import { ensureAuth } from '../auth/flow.js';
-import { registerModuleTools } from './tools.js';
+import { registerMcpTools } from './register.js';
 import { getCliVersion } from '../utils/version.js';
 
 export interface AuthProvider {
@@ -34,7 +34,7 @@ export async function startMcpServer(options?: { insecure?: boolean; timeout?: n
     );
 
     const auth = createAuthProvider(options);
-    registerModuleTools(server, auth);
+    registerMcpTools(server, auth);
 
     const transport = new StdioServerTransport();
     await server.connect(transport);

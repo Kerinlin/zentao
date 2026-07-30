@@ -3,14 +3,13 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { getAllModules } from '../src/modules';
+import { MCP_TOOL_NAMES } from '../src/mcp/register.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
-const MODULES = getAllModules();
 
 describe('MCP server (stdio e2e smoke)', () => {
     test(
-        'listTools returns module tools plus profile tools',
+        'listTools returns exactly the curated MCP tools',
         async () => {
             const transport = new StdioClientTransport({
                 command: 'bun',
@@ -23,21 +22,35 @@ describe('MCP server (stdio e2e smoke)', () => {
                 await client.connect(transport);
                 const { tools } = await client.listTools();
 
-                expect(tools.length).toBe(MODULES.length + 2);
+                expect(tools.length).toBe(MCP_TOOL_NAMES.length);
                 const names = new Set(tools.map(t => t.name));
-                expect(names.has('zentao_profile')).toBe(true);
-                expect(names.has('zentao_switch_profile')).toBe(true);
-                for (const mod of MODULES) {
-                    expect(names.has(`zentao_${mod.name}`)).toBe(true);
+                for (const name of MCP_TOOL_NAMES) {
+                    expect(names.has(name)).toBe(true);
                 }
+
+                // Old full-module surface must be gone
+                expect(names.has('zentao_bug')).toBe(false);
+                expect(names.has('zentao_task')).toBe(false);
+                expect(names.has('zentao_profile')).toBe(false);
+                expect(names.has('zentao_switch_profile')).toBe(false);
+                expect(names.has('list_products')).toBe(true);
+                expect(names.has('list_projects')).toBe(true);
+                expect(names.has('list_builds')).toBe(true);
+                expect(names.has('list_users')).toBe(true);
+
                 for (const t of tools) {
                     expect(t.inputSchema).toBeDefined();
                     expect(t.inputSchema?.type).toBe('object');
                 }
 
-                const bugTool = tools.find(t => t.name === 'zentao_bug');
-                expect(bugTool?.annotations?.readOnlyHint).toBe(false);
-                expect(bugTool?.annotations?.destructiveHint).toBe(true);
+                const listBugs = tools.find(t => t.name === 'list_bugs');
+                expect(listBugs?.annotations?.readOnlyHint).toBe(true);
+
+                const deleteBug = tools.find(t => t.name === 'delete_bug');
+                expect(deleteBug?.annotations?.destructiveHint).toBe(true);
+
+                const createBug = tools.find(t => t.name === 'create_bug');
+                expect(createBug?.annotations?.readOnlyHint).toBe(false);
             } finally {
                 await client.close();
             }

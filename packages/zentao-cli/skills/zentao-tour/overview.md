@@ -41,6 +41,8 @@ flowchart LR
 - 覆盖 20+ 模块（产品、项目、执行、需求、Bug、任务、测试用例、计划、版本、发布、反馈、工单等）的 CRUD 与状态流转
 - 对 AI 友好：默认输出 Markdown 表格便于阅读，加 `--format=json` 可获取结构化数据
 - 内置过滤、排序、分页、模糊搜索、字段摘取
+- 工作区上下文：list / create 可省略 `--product` 等范围参数（≥1.3.1）
+- `--product` 与 `--productID` 等价并双写；提 Bug 推荐 `upload` + `--steps-file`
 
 更多命令细节见 [zentao-cli 技能文档](../zentao-cli/SKILL.md)。
 
@@ -88,6 +90,8 @@ zentao login -s https://zentao.example.com -u <账号> -p <密码>
 ```
 
 具体 MCP 启动方式与参数以 [包 README](https://github.com/Kerinlin/zentao/blob/main/packages/zentao-cli/README.md) 为准；不同智能工具的配置文件位置不同（Cursor 的 `~/.cursor/mcp.json`、Claude Desktop 的 `claude_desktop_config.json` 等）。
+
+MCP 只提供精简 tool（Bug 工作流、账号/工作区、图片上传、产品/项目/版本/用户枚举），不是全量禅道 API。其它模块请用 CLI 技能。
 
 ## 就绪自检
 

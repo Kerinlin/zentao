@@ -1,5 +1,21 @@
 # Changes
 
+## Unreleased
+
+### 💥 Breaking
+
+- **MCP 精简为语义化 tool（Bug 工作流，当前 19 个）**: 删除按模块全量自动注册（`zentao_bug` / `zentao_task` / … 及 `action`+`params` 袋）。改为固定工具：Bug 列表/详情/创建/修改/删除/解决/关闭/激活、当前用户、账号列表、切换用户、工作区列表/创建/切换、图片上传。旧 `zentao_profile` / `zentao_switch_profile` 分别更名为 `get_current_user` / `switch_user`。
+
+### 🚀 优化与重构 (Refactor)
+
+- **MCP tool 去前缀**: tool 名改为 `list_bugs` / `create_bug` 等，不再带 `zentao_`；避免宿主显示为 `server_zentao_list_bugs` 双前缀。
+
+### ✨ 新特性 (Feat)
+
+- **MCP workspace / upload**: 新增 `list_workspaces`、`create_workspace`、`switch_workspace`、`upload_image`、`list_profiles`。
+- **MCP Bug 强 schema**: 一操作一 tool，字段一等平铺；list 默认 page=1、recPerPage=250、browseType=unclosed，默认省略 steps。
+- **MCP 枚举工具**: `list_products` / `list_projects` / `list_builds` / `list_users`（只读，供 Bug 归属与指派）。
+
 ## 0.2.10
 
 ### ✨ 新特性 (Feat)

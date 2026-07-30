@@ -54,7 +54,7 @@ src/
 ├── modules/                 # helper, args, executor
 ├── auth/                    # Login flow & credential prompting
 ├── config/                  # configstore + workspace state / workspace-sync (API 建区 + autoSet)
-├── mcp/                     # MCP server (tools + lifecycle)
+├── mcp/                     # MCP server: curated 15 tools (register + tools/*)
 ├── types/                   # CLI types + re-export SDK types
 └── utils/                   # format, render, HTML→MD, update-notifier, ...
 ```

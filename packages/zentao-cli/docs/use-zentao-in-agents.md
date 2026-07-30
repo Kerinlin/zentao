@@ -70,6 +70,12 @@ $ zentao add-skill
 
 推荐使用环境变量的方式进行登录，这样即便 Token 失效也会自动从环境变量获取相关信息重新进行登录。虽然 Agents 工具也能代替用户进行登录，但强烈建议不要将账号密码发送给 AI Agents 工具，以保证账号安全。
 
+## MCP 工具（精简）
+
+通过 `zentao add-mcp` 或 `zentao mcp` 接入时，服务只暴露 **19 个** tool（Bug 全套、账号/工作区/上传，以及产品/项目/版本/用户枚举）。
+
+不再提供按模块全量注册的 `zentao_bug`、`zentao_task` 等 tool。其它模块请用 CLI 技能。详见 [README MCP 段](../README.md#通过-mcp-服务使用)。
+
 ## 使用示例
 
 安装登录完成之后，可以在对应 Agent 工具中使用禅道 CLI 技能，下面为一些使用示例：
