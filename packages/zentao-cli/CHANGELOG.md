@@ -1,5 +1,13 @@
 # @kerin/zentao-cli
 
+## 1.3.3
+
+### Patch Changes
+
+- 6a19e3d: feat: 增强 MCP list_bugs 的默认值与 filter 筛选
+- Updated dependencies [6a19e3d]
+  - @kerin/zentao-api@1.3.3
+
 ## 1.3.2
 
 ### Patch Changes

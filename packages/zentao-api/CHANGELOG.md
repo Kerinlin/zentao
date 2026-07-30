@@ -1,5 +1,11 @@
 # @kerin/zentao-api
 
+## 1.3.3
+
+### Patch Changes
+
+- 6a19e3d: feat: 增强 MCP list_bugs 的默认值与 filter 筛选
+
 ## 1.3.2
 
 ### Patch Changes

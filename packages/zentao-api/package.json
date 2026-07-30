@@ -1,6 +1,6 @@
 {
   "name": "@kerin/zentao-api",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "type": "module",
   "description": "Browser and Node.js SDK for ZenTao API",
   "license": "MIT",
